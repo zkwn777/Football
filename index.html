@@ -1570,7 +1570,7 @@ function render3d(){const gl=GL.gl,g=GL.g,cam=G.cam,b=G.ball;
  const fpv=FPV()?G.teams[0].ctrl:null;let eye,look,fov=.62,nr=20,fpRoll=0;
  if(fpv){const cs=fpCam(fpv),yw=cs.yaw,dx=Math.cos(yw),dz=Math.sin(yw),spd=hyp(fpv.vx,fpv.vy),bob=Math.sin(fpv.phase*2)*Math.min(1,spd/180)*1.6;   // first person: eye just behind the player's head, tilted down at the ball
   const gkm=(G.gkMode||G.pk)&&fpv.role==='GK';eye=[cs.x-dx*(gkm?5:19)+(Math.random()-.5)*sk,(gkm?46:41)+bob,cs.z-dz*(gkm?5:19)+(Math.random()-.5)*sk];look=[cs.x+dx*120,(gkm?46:41)+bob-Math.tan(cs.pitch)*120,cs.z+dz*120];fov=1.04+Math.min(.17,Math.max(0,spd-160)/280)+(fpv.kickAt&&performance.now()-fpv.kickAt<140?-.04:0);nr=3;
-  {const ov=G.fpS&&G.fpS.ov>0?G.fpS.ov:0;if(ov>0){const e0=clamp(ov,0,1),e=e0*e0*(3-2*e0),E=[fpv.x-dx*150,115,fpv.y-dz*150],Lk=[fpv.x+dx*45,0,fpv.y+dz*45];for(let i=0;i<3;i++){eye[i]+=(E[i]-eye[i])*e;look[i]+=(Lk[i]-look[i])*e}fov+=(1.22-fov)*e;nr=8}}   // you just switched: pull up and back for a moment so you can see who you are and what is around you, then drop into first person
+  if(Prefs.tp){const E=[cs.x-dx*125,92,cs.z-dz*125],Lk=[cs.x+dx*50,0,cs.z+dz*50];eye=E;look=Lk;fov=1.18;nr=8}   // close third person: behind and above your player, same controls as first person   // you just switched: pull up and back for a moment so you can see who you are and what is around you, then drop into first person
   fpRoll=0;const ks=fpSkill(fpv);if(ks){const lx=look[0]-eye[0],lz=look[2]-eye[2],c=Math.cos(ks.yaw),s2=Math.sin(ks.yaw);look[0]=eye[0]+lx*c-lz*s2;look[2]=eye[2]+lx*s2+lz*c;const rx=-dz*ks.lat,rz=dx*ks.lat;eye[0]+=rx;eye[2]+=rz;look[0]+=rx;look[2]+=rz;eye[1]+=ks.dip;look[1]+=ks.dip;fov+=ks.fov;fpRoll=ks.roll}}
  else{eye=[tx+(Math.random()-.5)*sk,530*f+10,tz+650*f+(Math.random()-.5)*sk];look=[tx,0,tz-25]}
  if(fpv)fov/=1+(cam.chz||0)*1.4;mPersp(GL.proj,fov,w/h,nr,5000);mLook(GL.view,eye,look);if(fpRoll){const cr=Math.cos(fpRoll),sr=Math.sin(fpRoll),R=new Float32Array([cr,sr,0,0,-sr,cr,0,0,0,0,1,0,0,0,0,1]),T=new Float32Array(16);mMul(T,R,GL.view);GL.view.set(T)}mMul(GL.vp,GL.proj,GL.view);gl.uniformMatrix4fv(GL.U.uVP,false,GL.vp);
@@ -1578,12 +1578,12 @@ function render3d(){const gl=GL.gl,g=GL.g,cam=G.cam,b=G.ball;
  gl.depthMask(true);for(const s of GL.statics)DS(s);
  // blob shadows & marker ring (no depth write)
  gl.depthMask(false);const wh=[1,1,1,1];
- for(const t of G.teams)for(const p of t.players){if(p===fpv&&!(G.fpS&&G.fpS.ov>.02))continue;resetM();const m=MS[0];mT(m,p.x,.6,p.y);const s=(p.state==='dive'||p.state==='slide'||p.state==='lie')?[22,10]:[14,9];if(Prefs.gfx==='3D Models'){const air=Math.min(1,(p.z||0)/24);mS(m,s[0]*1.08*(1-air*.38),1,s[1]*1.08*(1-air*.38));D(g.plane,[1,1,1,1-air*.6],GL.t.shadow,0)}else{mS(m,s[0]*(1-(p.z||0)*.01),1,s[1]);D(g.plane,wh,GL.t.shadow,0)}}
+ for(const t of G.teams)for(const p of t.players){if(p===fpv&&!Prefs.tp)continue;resetM();const m=MS[0];mT(m,p.x,.6,p.y);const s=(p.state==='dive'||p.state==='slide'||p.state==='lie')?[22,10]:[14,9];if(Prefs.gfx==='3D Models'){const air=Math.min(1,(p.z||0)/24);mS(m,s[0]*1.08*(1-air*.38),1,s[1]*1.08*(1-air*.38));D(g.plane,[1,1,1,1-air*.6],GL.t.shadow,0)}else{mS(m,s[0]*(1-(p.z||0)*.01),1,s[1]);D(g.plane,wh,GL.t.shadow,0)}}
  {resetM();const m=MS[0],k=1-Math.min(.6,b.z/250);mT(m,b.x,.7,b.y);mS(m,13*k,1,9*k);D(g.plane,wh,GL.t.shadow,0)}
  const u=G.teams[0].ctrl;   // the selection ring is now a stamina ring, drawn in drawFx
  gl.depthMask(true);
  // players
- for(const t of G.teams){const cl=GL.kc[t.idx];for(const p of t.players)if((p!==fpv||(G.fpS&&G.fpS.ov>.02))&&!p.park)drawPlayer3(p,cl)}
+ for(const t of G.teams){const cl=GL.kc[t.idx];for(const p of t.players)if((p!==fpv||Prefs.tp)&&!p.park)drawPlayer3(p,cl)}
  // ball (rolls along its travel direction)
  {const dx=b.x-GL.lb.x,dz=b.y-GL.lb.y,len=hyp(dx,dz);if(len>.01&&len<80){const ax=dz/len,az=-dx/len,an=len/5,c=Math.cos(an),s=Math.sin(an),t1=1-c,R=new Float32Array([t1*ax*ax+c,t1*ax*0+0,-s*az*0+s*0+t1*ax*az*0,0,0,0,0,0,0,0,0,0,0,0,0,1]);
    // Rodrigues for axis (ax,0,az)
@@ -1595,7 +1595,7 @@ function render3d(){const gl=GL.gl,g=GL.g,cam=G.cam,b=G.ball;
  gl.depthMask(true);
  drawFx(u,b);drawRadar(b,u,null)}
 function drawFx(u,b){const c=ctx,w=cv.width,h=cv.height,sc=w/Math.max(1,cv.clientWidth);c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,w,h);if(!u||G.replay)return;
- if(G.practice)drawPractice(c,sc);drawTrail(c,sc,b);if(FPV()){if((G.gkMode||G.pk)&&u.role==='GK')drawGkFx(c,sc,u,b);else drawFpFx(c,sc,u,b);return}
+ if(G.practice)drawPractice(c,sc);drawTrail(c,sc,b);if(FPV()){if((G.gkMode||G.pk)&&u.role==='GK'&&!Prefs.tp)drawGkFx(c,sc,u,b);else drawFpFx(c,sc,u,b);return}
  const bob=Math.sin(performance.now()/170)*2.5;
  if(G.passArc){const a=G.passArc,gr=Math.min(1,a.t/.22),al=Math.max(0,1-Math.max(0,a.t-.3)/.45),mx=(a.x0+a.x1)/2,mz=(a.y0+a.y1)/2,ch=a.h*2;   // brief bezier arc for passes
   c.save();c.lineCap='round';c.lineJoin='round';c.strokeStyle=a.col;c.globalAlpha=al*.9;c.lineWidth=4*sc;c.setLineDash([10*sc,7*sc]);c.beginPath();
@@ -1797,7 +1797,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=58;
+const NK_BUILD=59;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
@@ -2571,7 +2571,7 @@ function startPensMode(){const you=sel.you,opp=sel.opp,diff=sel.diff;Snd.init();
   showScreen('result')})}
 /* ================= v43: first person, auto-aim (admin), practice mode ================= */
 const LSx={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
-Prefs.fpv=LSx.get('nk_fpv','0')==='1';Prefs.aim=LSx.get('nk_aim','0')==='1';Prefs.aimU=LSx.get('nk_aimu','0')==='1';Prefs.skcam=LSx.get('nk_skcam','0')==='1';
+{const cm=LSx.get('nk_cam',null);if(cm===null)Prefs.fpv=LSx.get('nk_fpv','0')==='1';else Prefs.fpv=cm!=='0';Prefs.tp=cm==='2'}Prefs.aim=LSx.get('nk_aim','0')==='1';Prefs.aimU=LSx.get('nk_aimu','0')==='1';Prefs.skcam=LSx.get('nk_skcam','0')==='1';
 let PB={};try{PB=JSON.parse(LSx.get('nk_prac','{}'))||{}}catch(e){PB={}}
 In.yaw=0;
 
@@ -2604,8 +2604,7 @@ function drawFpLegs(c,sc,u){const w=cv.width,h=cv.height,sp=hyp(u.vx,u.vy),run=M
  c.restore()}
 function fpBallArrow(c,sc,u,b){const w=cv.width,h=cv.height,rel=angD(Math.atan2(b.y-u.y,b.x-u.x),In.yaw);if(Math.abs(rel)<.85||b.owner===u)return;const s=Math.sign(rel),x=w/2+s*w*.43,y=h*.3;c.save();c.fillStyle='rgba(255,255,255,.9)';c.strokeStyle='rgba(0,0,0,.6)';c.lineWidth=3*sc;c.beginPath();c.moveTo(x+s*16*sc,y);c.lineTo(x-s*8*sc,y-14*sc);c.lineTo(x-s*8*sc,y+14*sc);c.closePath();c.stroke();c.fill();c.beginPath();c.arc(x-s*22*sc,y,8*sc,0,PI*2);c.fill();c.stroke();c.restore()}
 function drawFpFx(c,sc,u,b){const w=cv.width,h=cv.height,cx=w/2,cy=h*.5;
- {const S=G.fpS,ov=S&&S.ov>0?clamp(S.ov,0,1):0;if(ov>0){c.save();c.globalAlpha=ov;c.strokeStyle='#ffc93c';c.lineWidth=4.5*sc;c.lineCap='round';c.beginPath();for(let i=0;i<=40;i++){const a=i/40*PI*2,pp=proj3(u.x+Math.cos(a)*26,.9,u.y+Math.sin(a)*26);i?c.lineTo(pp[0],pp[1]):c.moveTo(pp[0],pp[1])}c.stroke();
-  const hp=proj3(u.x,64+Math.sin(performance.now()/130)*3,u.y);c.fillStyle='#ffc93c';c.beginPath();c.moveTo(hp[0],hp[1]);c.lineTo(hp[0]-11*sc,hp[1]-17*sc);c.lineTo(hp[0]+11*sc,hp[1]-17*sc);c.closePath();c.fill();c.font='800 '+Math.round(15*sc)+'px Barlow Condensed,Arial Narrow,sans-serif';c.textAlign='center';c.fillText('YOU',hp[0],hp[1]-22*sc);c.restore()}}
+ {const ov=Prefs.tp?.9:0;if(ov>0){c.save();c.globalAlpha=ov;c.strokeStyle='#ffc93c';c.lineWidth=4.5*sc;c.lineCap='round';c.beginPath();for(let i=0;i<=40;i++){const a=i/40*PI*2,pp=proj3(u.x+Math.cos(a)*26,.9,u.y+Math.sin(a)*26);i?c.lineTo(pp[0],pp[1]):c.moveTo(pp[0],pp[1])}c.stroke();c.restore()}}
  c.save();
  const sp=hyp(u.vx,u.vy),spr=In.sprint&&sp>190;
  {const g=c.createRadialGradient(cx,cy,h*.45,cx,cy,w*.62);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,'+(spr?.5:.34)+')');c.fillStyle=g;c.fillRect(0,0,w,h)}
@@ -2757,11 +2756,11 @@ $('#prac-map').addEventListener('click',e=>{const c=e.target.closest('.chip');if
 $('#pe-retry').onclick=()=>startPractice(G.practice?G.practice.id:'free');
 $('#pe-next').onclick=()=>{const id=$('#pe-next').dataset.id;if(id)startPractice(id)};
 $('#pe-levels').onclick=()=>{G.practice=null;hidePracUI();G.state='menu';$('#hud').hidden=true;hideControls();hideBanner();showScreen('practice')};
-function syncSet(){{const sk=$('#s-skcam');if(sk){sk.textContent=Prefs.skcam?'On':'Off';sk.classList.toggle('on',!!Prefs.skcam)}}const c=$('#s-cam'),a=$('#s-aim'),r=$('#s-aim-row');if(c){c.textContent=Prefs.fpv?'First person':'Broadcast';c.classList.toggle('on',!!Prefs.fpv)}{const gb=$('#s-gfx');if(gb){gb.textContent=Prefs.gfx;gb.classList.toggle('on',Prefs.gfx==='3D Models')}}
- if(r)r.hidden=!Prefs.aimU;if(a){a.textContent=Prefs.aim?'On':'Off';a.classList.toggle('on',!!Prefs.aim)}const pc=$('#p-cam');if(pc)pc.textContent='View: '+(Prefs.fpv?'First person':'Broadcast')}
-function setFpv(v){Prefs.fpv=v;LSx.set('nk_fpv',v?'1':'0');if(v&&!(typeof GL!=='undefined'&&GL.gl))toast0('First person needs 3D graphics');if(v&&G.teams.length&&G.teams[0].ctrl){const u=G.teams[0].ctrl;In.yaw=Math.atan2(u.fy,u.fx);G.fpC=u}syncSet()}
+function syncSet(){{const sk=$('#s-skcam');if(sk){sk.textContent=Prefs.skcam?'On':'Off';sk.classList.toggle('on',!!Prefs.skcam)}}const c=$('#s-cam'),a=$('#s-aim'),r=$('#s-aim-row');if(c){c.textContent=(Prefs.tp?'Close 3rd person':Prefs.fpv?'First person':'Broadcast');c.classList.toggle('on',!!Prefs.fpv)}{const gb=$('#s-gfx');if(gb){gb.textContent=Prefs.gfx;gb.classList.toggle('on',Prefs.gfx==='3D Models')}}
+ if(r)r.hidden=!Prefs.aimU;if(a){a.textContent=Prefs.aim?'On':'Off';a.classList.toggle('on',!!Prefs.aim)}const pc=$('#p-cam');if(pc)pc.textContent='View: '+((Prefs.tp?'Close 3rd person':Prefs.fpv?'First person':'Broadcast'))}
+function setFpv(v){const m=v===true?1:v===false?0:v;Prefs.fpv=m>0;Prefs.tp=m===2;LSx.set('nk_cam',String(m));LSx.set('nk_fpv',m?'1':'0');v=Prefs.fpv;if(v&&!(typeof GL!=='undefined'&&GL.gl))toast0('First person needs 3D graphics');if(v&&G.teams.length&&G.teams[0].ctrl){const u=G.teams[0].ctrl;In.yaw=Math.atan2(u.fy,u.fx);G.fpC=u}syncSet()}
 function setAim(v){Prefs.aim=v;LSx.set('nk_aim',v?'1':'0');syncSet()}
-$('#s-skcam').onclick=()=>{Prefs.skcam=!Prefs.skcam;LSx.set('nk_skcam',Prefs.skcam?'1':'0');syncSet()};$('#s-cam').onclick=()=>setFpv(!Prefs.fpv);$('#p-cam').onclick=()=>setFpv(!Prefs.fpv);$('#s-aim').onclick=()=>setAim(!Prefs.aim);syncSet();
+$('#s-skcam').onclick=()=>{Prefs.skcam=!Prefs.skcam;LSx.set('nk_skcam',Prefs.skcam?'1':'0');syncSet()};const camNext=()=>setFpv(Prefs.tp?0:Prefs.fpv?2:1);$('#s-cam').onclick=camNext;$('#p-cam').onclick=camNext;$('#s-aim').onclick=()=>setAim(!Prefs.aim);syncSet();
 
 /* ---------- goalkeeper mode: you are the keeper, both teams are AI ---------- */
 function gkMove(){const m=In.mag;if(!m)return[0,0];if(FPV()){const f=-In.my*m,r=In.mx*m,y=In.yaw||0,dx=Math.cos(y),dy=Math.sin(y);return[dx*f-dy*r,dy*f+dx*r]}return[In.mx*m,In.my*m]}
