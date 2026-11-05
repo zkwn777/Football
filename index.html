@@ -523,6 +523,7 @@ button{transition:transform .1s,filter .12s}button:active{transform:scale(.95)}
         <div class="opt"><div class="lab">Difficulty</div><div class="chips" id="o-diff"></div></div>
         <div class="opt"><div class="lab">Match length</div><div class="chips" id="o-len"></div></div>
         <div class="opt"><div class="lab">Match size</div><div class="chips" id="o-size"></div></div>
+        <div class="opt" id="o-gkm-wrap" style="display:none"><div class="lab">Keeper mode</div><div class="chips" id="o-gkm"></div></div>
         <div class="opt" id="o-rules-wrap" style="display:none"><div class="lab">Custom rules</div><div id="o-rules" class="rules"></div></div>
         <div id="rules-note" hidden style="font-size:12px;opacity:.8;text-align:center;margin-top:6px"></div>
         <div class="opt gone"><div class="lab">Cards &amp; fouls</div><div class="chips" id="o-cards"></div></div>
@@ -1652,7 +1653,8 @@ function renderSelect(){const y=byId(sel.you),o=byId(sel.opp);
  const slot=(el,n,k,act)=>{el.classList.toggle('act',act);el.innerHTML=`${jersey(n)}<div style="flex:1;min-width:0"><div class="k">${k} · OVR ${n.ovr}</div><div class="nm">${n.name}</div><div class="st">ATT ${n.att} · MID ${n.mid} · DEF ${n.def}</div></div>`};
  slot($('#slot-you'),y,sel.tour?'YOUR NATION':'YOUR TEAM',sel.active==='you'||sel.tour);slot($('#slot-opp'),o,'OPPONENT',sel.active==='opp');$('#slot-opp').style.display=sel.tour?'none':'';{const gk=$('#go-kick');gk.disabled=false;gk.style.opacity=''}$('#sel-title').textContent=sel.tour?'Pick your nation':'Choose nations';$('#go-kick').textContent=sel.tour?'Start':'Kick off';
  const chips=(id,items,cur)=>{$(id).innerHTML=items.map(([v,l])=>`<button class="chip ${v===cur?'on':''}" data-v="${v}" type="button">${l}</button>`).join('')};
- chips('#o-form',Object.keys(FORMS).filter(f=>!/v/.test(f)).map(f=>[f,f]),sel.form);chips('#o-size',[[0,'11v11'],[5,'5v5'],[3,'3v3']],sel.small);chips('#o-cards',[[1,'On'],[0,'Off']],Prefs.cards?1:0);$('#o-size').parentElement.style.display=sel.online||sel.tour||sel.pens||sel.gk?'none':'';$('#o-cards').parentElement.style.display=sel.pens||sel.online?'none':'';if(sel.small){$('#o-form').parentElement.style.display='none';$('#o-pitch').parentElement.style.display='none'}else if(!sel.online){$('#o-form').parentElement.style.display='';$('#o-pitch').parentElement.style.display=''}chips('#o-diff',DIFF.map((d,i)=>[i,d.n]),sel.diff);chips('#o-len',[[180,'3 min'],[240,'4 min'],[360,'6 min']],sel.len);chips('#o-pitch',[[0,'Standard'],[1,'Large'],[3,'Pro']],sel.pitch);$('#o-rules-wrap').style.display='none';if(sel.online){renderRules();onlineSelectUI()}}
+ chips('#o-form',Object.keys(FORMS).filter(f=>!/v/.test(f)).map(f=>[f,f]),sel.form);chips('#o-size',[[0,'11v11'],[5,'5v5'],[3,'3v3']],sel.small);chips('#o-cards',[[1,'On'],[0,'Off']],Prefs.cards?1:0);$('#o-size').parentElement.style.display=sel.online||sel.tour||sel.pens||sel.gk?'none':'';$('#o-cards').parentElement.style.display=sel.pens||sel.online?'none':'';if(sel.small){$('#o-form').parentElement.style.display='none';$('#o-pitch').parentElement.style.display='none'}else if(!sel.online){$('#o-form').parentElement.style.display='';$('#o-pitch').parentElement.style.display=''}chips('#o-diff',DIFF.map((d,i)=>[i,d.n]),sel.diff);chips('#o-len',[[180,'3 min'],[240,'4 min'],[360,'6 min']],sel.len);chips('#o-pitch',[[0,'Standard'],[1,'Large'],[3,'Pro']],sel.pitch);$('#o-rules-wrap').style.display='none';{const w=$('#o-gkm-wrap');w.style.display=sel.gk?'':'none';if(sel.gk){chips('#o-gkm',[[0,'Full match'],[1,'Penalties only']],sel.gkm||0);$('#o-len').parentElement.style.display=sel.gkm?'none':''}}
+ if(sel.online){renderRules();onlineSelectUI()}}
 function renderRules(){const names={first:'First to',stam:'Stamina',golden:'Golden goal'};$('#o-rules').innerHTML=Object.keys(RULE_DEF).map(k=>`<div class="rg"><span class="rl">${names[k]}</span><span class="chips" data-k="${k}">${RULE_DEF[k].map(([l,v])=>`<button class="chip ${sel.rules[k]===v?'on':''}" data-v="${v}" type="button">${l}</button>`).join('')}</span></div>`).join('')}
 $('#o-rules').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;sel.rules[c.parentElement.dataset.k]=Number(c.dataset.v);renderRules();netPubCfg()});
 $('#nations').addEventListener('click',e=>{const c=e.target.closest('.card');if(!c)return;const id=c.dataset.id;
@@ -1789,7 +1791,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=53;
+const NK_BUILD=54;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
@@ -2788,7 +2790,8 @@ function drawGkFx(c,sc,u,b){const w=cv.width,h=cv.height,t=performance.now()/100
   c.fillStyle='rgba(46,230,110,.9)';c.beginPath();c.roundRect(-18*u1,10*u1,36*u1,8*u1,4*u1);c.fill();c.restore()}
  const ar=G.ball;if(!ar.owner&&ar.vx*-u.team.dir>60){const tt=(ownGoalX(u.team)-ar.x)/ar.vx;if(tt>0&&tt<1.6){const py=ar.y+ar.vy*tt,pz=Math.max(0,ar.z+ar.vz*tt-450*tt*tt),p0=proj3(ownGoalX(u.team),pz,py);if(p0[2]>.1&&Math.abs(py-W/2)<GW/2+20){c.strokeStyle='rgba(255,90,80,.85)';c.lineWidth=3*sc;c.beginPath();c.arc(p0[0],p0[1],12*sc,0,PI*2);c.stroke()}}}
  c.restore()}
-const _smOrig=startMatch;startMatch=function(){_smOrig();if(sel.gk)gkSetup();else G.gkMode=false};
+const _smOrig=startMatch;startMatch=function(){_smOrig();if(sel.gk){gkSetup();if(sel.gkm&&typeof GL!=='undefined'&&GL.gl)gkPensOnly()}else G.gkMode=false};
+function gkPensOnly(){G.state='play';G.recorded=true;startShootout(G.teams[0].nat.id,G.teams[1].nat.id,sel.diff|0,(a,c)=>{G.pkRes=[a,c];G.half=2;G.state='full';hideControls();showResult(true)},{keep:true,prev:'none'})}
 const _bm2=buildMatch;buildMatch=function(o){G.gkMode=false;G.fpS=null;G.fpC=null;return _bm2(o)};
 const _upd2=update;update=function(dt){if(G.gkMode)gkLabels();return _upd2(dt)};
 $('#go-gk').onclick=()=>{Snd.init();sel.small=0;sel.pens=false;sel.tour=false;sel.online=false;sel.gk=1;showScreen('select');renderSelect()};
@@ -2807,6 +2810,7 @@ $('#s-gfx').onclick=()=>{gameSettings.graphicsMode=gameSettings.graphicsMode==='
   if(a&&G.state==='play'&&!G.paused&&!G.practice&&!G.gkMode&&hud&&!hud.hidden&&!NET.gone){const g=a.players.find(q=>q.role==='GK'&&!q.park),o=G.ball&&G.ball.owner;
    if(g&&o&&o.team!==a&&!(g.rushT>0)&&!(g.rushCd>0)&&g.state===''&&hyp(o.x-ownGoalX(a),o.y-W/2)<470&&hyp(o.x-g.x,o.y-g.y)<420)show=true}}catch(e){}
   if(rb.hidden===show)rb.hidden=!show},120)}
+$('#o-gkm').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;sel.gkm=Number(c.dataset.v);renderSelect()});
 /* ================= PENALTIES IN THE REAL GAME =================
    Shootouts and in-match penalties now play on the match pitch with the match players, camera and controls.
    You take your own kicks (aim with the stick, hold SHOOT) and you are the keeper when the other side kicks (stick + DIVE). */
