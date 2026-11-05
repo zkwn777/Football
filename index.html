@@ -1563,11 +1563,12 @@ function render3d(){const gl=GL.gl,g=GL.g,cam=G.cam,b=G.ball;
  const w=cv.width,h=cv.height;gl.viewport(0,0,w,h);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
  // camera: broadcast angle behind the near touchline
  const f=1/(cam.zoom*(1+(cam.chz||0))),tx=clamp(cam.x,130,L-130),tz=clamp(cam.y,W*.2,W*.8),sk=cam.shake;
- const fpv=FPV()?G.teams[0].ctrl:null;let eye,look,fov=.62,nr=20;
+ const fpv=FPV()?G.teams[0].ctrl:null;let eye,look,fov=.62,nr=20,fpRoll=0;
  if(fpv){const cs=fpCam(fpv),yw=cs.yaw,dx=Math.cos(yw),dz=Math.sin(yw),spd=hyp(fpv.vx,fpv.vy),bob=Math.sin(fpv.phase*2)*Math.min(1,spd/180)*1.6;   // first person: eye just behind the player's head, tilted down at the ball
-  const gkm=(G.gkMode||G.pk)&&fpv.role==='GK';eye=[cs.x-dx*(gkm?5:19)+(Math.random()-.5)*sk,(gkm?46:41)+bob,cs.z-dz*(gkm?5:19)+(Math.random()-.5)*sk];look=[cs.x+dx*120,(gkm?46:41)+bob-Math.tan(cs.pitch)*120,cs.z+dz*120];fov=1.04+Math.min(.17,Math.max(0,spd-160)/280)+(fpv.kickAt&&performance.now()-fpv.kickAt<140?-.04:0);nr=3}
+  const gkm=(G.gkMode||G.pk)&&fpv.role==='GK';eye=[cs.x-dx*(gkm?5:19)+(Math.random()-.5)*sk,(gkm?46:41)+bob,cs.z-dz*(gkm?5:19)+(Math.random()-.5)*sk];look=[cs.x+dx*120,(gkm?46:41)+bob-Math.tan(cs.pitch)*120,cs.z+dz*120];fov=1.04+Math.min(.17,Math.max(0,spd-160)/280)+(fpv.kickAt&&performance.now()-fpv.kickAt<140?-.04:0);nr=3;
+  fpRoll=0;const ks=fpSkill(fpv);if(ks){const lx=look[0]-eye[0],lz=look[2]-eye[2],c=Math.cos(ks.yaw),s2=Math.sin(ks.yaw);look[0]=eye[0]+lx*c-lz*s2;look[2]=eye[2]+lx*s2+lz*c;const rx=-dz*ks.lat,rz=dx*ks.lat;eye[0]+=rx;eye[2]+=rz;look[0]+=rx;look[2]+=rz;eye[1]+=ks.dip;look[1]+=ks.dip;fov+=ks.fov;fpRoll=ks.roll}}
  else{eye=[tx+(Math.random()-.5)*sk,530*f+10,tz+650*f+(Math.random()-.5)*sk];look=[tx,0,tz-25]}
- if(fpv)fov/=1+(cam.chz||0)*1.4;mPersp(GL.proj,fov,w/h,nr,5000);mLook(GL.view,eye,look);mMul(GL.vp,GL.proj,GL.view);gl.uniformMatrix4fv(GL.U.uVP,false,GL.vp);
+ if(fpv)fov/=1+(cam.chz||0)*1.4;mPersp(GL.proj,fov,w/h,nr,5000);mLook(GL.view,eye,look);if(fpRoll){const cr=Math.cos(fpRoll),sr=Math.sin(fpRoll),R=new Float32Array([cr,sr,0,0,-sr,cr,0,0,0,0,1,0,0,0,0,1]),T=new Float32Array(16);mMul(T,R,GL.view);GL.view.set(T)}mMul(GL.vp,GL.proj,GL.view);gl.uniformMatrix4fv(GL.U.uVP,false,GL.vp);
  // statics (opaque)
  gl.depthMask(true);for(const s of GL.statics)DS(s);
  // blob shadows & marker ring (no depth write)
@@ -1791,7 +1792,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=54;
+const NK_BUILD=55;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
@@ -2811,6 +2812,19 @@ $('#s-gfx').onclick=()=>{gameSettings.graphicsMode=gameSettings.graphicsMode==='
    if(g&&o&&o.team!==a&&!(g.rushT>0)&&!(g.rushCd>0)&&g.state===''&&hyp(o.x-ownGoalX(a),o.y-W/2)<470&&hyp(o.x-g.x,o.y-g.y)<420)show=true}}catch(e){}
   if(rb.hidden===show)rb.hidden=!show},120)}
 $('#o-gkm').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;sel.gkm=Number(c.dataset.v);renderSelect()});
+
+/* ---------- first-person skill camera: the view does what your head would do in the move ---------- */
+const FPSK={spin:{roulette:1,marseille:1,pirouette:1,whirl:2,anklebreaker:.5},sway:{stepover:2,triple:3,hocus:2,toetap:3,shimmy:2,croqueta:2,elastico:1.5,heelflick:1},surge:{lightning:1,warp:1,overdrive:1,timestop:1,freeze:1,ghost:1,fake:1}};
+function fpSkill(u){if(!(u.skillT>0)||!u.skillKind)return null;const D=SKD[u.skillKind];if(!D||!D.T)return null;const k=u.skillKind,s=u.skillSide||1,x=clamp(1-u.skillT/D.T,0,1),ease=x*x*(3-2*x),pulse=Math.sin(x*PI);
+ let yaw=0,lat=0,dip=0,fov=0,roll=0;
+ if(FPSK.spin[k]){yaw=s*ease*2*PI*FPSK.spin[k];roll=s*Math.sin(x*PI*2)*.07;dip=-pulse*2;fov=pulse*.1}
+ else if(FPSK.sway[k]){const n=FPSK.sway[k],w=Math.sin(x*PI*2*n);lat=w*13*pulse;yaw=w*.2*pulse;roll=w*.1*pulse;dip=-pulse*1.5}
+ else if(k==='lightning'||k==='warp'||k==='overdrive'){fov=pulse*.34;dip=-pulse*1.8;roll=s*pulse*.05}
+ else if(k==='freeze'||k==='timestop'||k==='ghost'){fov=-pulse*.14;roll=s*pulse*.04}
+ else if(k==='fake'){dip=-pulse*7;fov=-pulse*.1;roll=s*pulse*.03}
+ else if(k==='earthquake'||k==='shockwave'){dip=Math.sin(x*60)*3*(1-x);fov=pulse*.08}
+ else{const sw=Math.sin(x*PI);lat=s*sw*18;yaw=s*sw*.38;roll=s*sw*.12;dip=-sw*2.5}   // turns, feints, drags, cuts: lean and swing into the move
+ return{yaw,lat,dip,fov,roll}}
 /* ================= PENALTIES IN THE REAL GAME =================
    Shootouts and in-match penalties now play on the match pitch with the match players, camera and controls.
    You take your own kicks (aim with the stick, hold SHOOT) and you are the keeper when the other side kicks (stick + DIVE). */
@@ -2897,6 +2911,6 @@ let last=0;
 function frame(ts){requestAnimationFrame(frame);const dt=Math.min(.033,Math.max(0,(ts-last)/1000)||0);last=ts;
  if(G.state!=='menu'&&G.ball){if(G.online==='guest')netGuestFrame(dt);else{if(!G.paused&&!SO)update(dt);if(G.online==='host'&&NET.room)netHostTick(dt)}if(!SO)render();hud()}}
 buildPitch();initGL();fit();requestAnimationFrame(frame);
-window.__nk={pkStart:(...a)=>pkStart(...a),pkUpdate,Club,clubNat,MARKET,cardPrice,PCS,pcOpen,cardBonus,Daily,foul,resolveFoul,startPenaltyKick,startShootout,so:()=>SO,G,In,sel,startMatch,tackle,simShot,startPractice,LEVELS,PB:()=>PB,FPV,fpMove,autoAimShot,L:()=>L,W:()=>W,setOwner,act,doSkill,doShoot,doPass,netHostStart,netGuestStart,hostSnap,guestApply,update,render,NATIONS,Prefs,NET,NETIN,rollPack,PACKS,SKILLS,SKD,awardMatch,tour:()=>T,tourFinish,newTour,renderTour};
+window.__nk={fpSkill:u=>fpSkill(u),pkStart:(...a)=>pkStart(...a),pkUpdate,Club,clubNat,MARKET,cardPrice,PCS,pcOpen,cardBonus,Daily,foul,resolveFoul,startPenaltyKick,startShootout,so:()=>SO,G,In,sel,startMatch,tackle,simShot,startPractice,LEVELS,PB:()=>PB,FPV,fpMove,autoAimShot,L:()=>L,W:()=>W,setOwner,act,doSkill,doShoot,doPass,netHostStart,netGuestStart,hostSnap,guestApply,update,render,NATIONS,Prefs,NET,NETIN,rollPack,PACKS,SKILLS,SKD,awardMatch,tour:()=>T,tourFinish,newTour,renderTour};
 })();
 </script>
