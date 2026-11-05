@@ -1135,10 +1135,13 @@ const SKD={
  shockwave:{T:.5,i:2,s:.8,fool:[0,0],stun:[300,2,10],mv:k=>[.8,0]},
  overdrive:{T:1.5,i:2,s:.2,fool:[140,1.4],mv:k=>[2.2,0]}};
 const foolChance=()=>[.95,.82,.68][G.diff];
+const SIDEK=new Set(['stepover','roll','elastico','bodyfeint','jink','shoulder','cruyff','hocus','chop','marseille','anklebreaker','croqueta','shimmy','toetap','triple','inside','bait','stopgo']);   // moves that sell one side and burst the other: every defender has to guess
 function foolDefenders(p,id){const f=(SKD[id]||{}).fool;if(!f||!f[0])return;const px=-p.skDy*p.skillSide,py=p.skDx*p.skillSide;
  for(const o of G.teams[1-p.team.idx].players){if(o.role==='GK'||o.state==='slide')continue;const vx=o.x-p.x,vy=o.y-p.y,d=hyp(vx,vy);if(d>f[0])continue;
   if(vx*p.skDx+vy*p.skDy<-12)continue;                       // already behind the dribbler: nothing to beat
-  if(Math.random()>foolChance())continue;                    // some defenders read it
+  if(SIDEK.has(id)){const pw=clamp(.5+(f[0]-90)/250,.4,.66)+[.06,0,-.06][G.diff];   // a real 50/50: each defender picks a side, and the move is a bit better than a coin flip the fancier it is
+   if(Math.random()>pw){o.tackCd=Math.min(o.tackCd,.1);o.readT=.5;o.guessed=true;continue}}       // guessed your burst side: still tight on you and free to tackle
+  else if(Math.random()>foolChance())continue;
   let lx=-px*.85+p.skDx*.25,ly=-py*.85+p.skDy*.25;if(id==='rainbow'||id==='sombrero'||id==='nutmeg'){lx=-p.skDx*.6;ly=-p.skDy*.6}
   const n=hyp(lx,ly)||1;o.fooled=f[1]*(1-d/f[0]*.35);o.foolX=lx/n;o.foolY=ly/n;o.tackCd=Math.max(o.tackCd,f[1])}}
 function doSkill(p,id){const b=G.ball;if(id==='mix'){const pool=SKILLS.filter(s=>s.id!=='mix'&&s.rar!=='admin'&&(p.team!==G.teams[0]||G.online||Prefs.has(s.id)));id=pool[Math.floor(Math.random()*pool.length)].id}
@@ -1792,7 +1795,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=55;
+const NK_BUILD=56;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
