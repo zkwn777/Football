@@ -562,13 +562,20 @@ button{transition:transform .1s,filter .12s}button:active{transform:scale(.95)}
   </div>
 
   <div id="overlay-so" hidden><canvas id="so-cv"></canvas><div id="so-hud"></div><button class="ghost" id="so-skip" type="button">Skip</button><div id="so-pop"></div><div id="so-hint"></div></div>
+  <section class="screen" id="screen-mys" hidden>
+    <div class="sel-head"><button class="ghost" id="mys-back" type="button">Back</button><h2>Mystery Ball</h2></div>
+    <div class="modes">
+      <button class="mode" id="go-mys-ai" type="button"><i class="mi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 40V20a4 4 0 0 1 8 0v-6a4 4 0 0 1 8 0v6a4 4 0 0 1 8 0v14c0 5-4 8-9 8h-6c-6 0-9-3-9-8z"/></svg></i><b>VS AI</b><span>Power-up cards vs the computer</span></button>
+      <button class="mode" id="go-mys-fr" type="button"><i class="mi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 40V20a4 4 0 0 1 8 0v-6a4 4 0 0 1 8 0v6a4 4 0 0 1 8 0v14c0 5-4 8-9 8h-6c-6 0-9-3-9-8z"/></svg></i><b>VS Friend</b><span>Online with a room code</span></button>
+    </div>
+  </section>
   <section class="screen" id="screen-play" hidden>
     <div class="sel-head"><button class="ghost" id="play-back" type="button">Back</button><h2>Choose mode</h2></div>
     <div class="modes">
       <button class="mode" id="go-vsai" type="button"><i class="mi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="14" width="30" height="22" rx="6"/><circle cx="19" cy="25" r="2.5"/><circle cx="29" cy="25" r="2.5"/><path d="M24 14V8M21 8h6M4 25h5M39 25h5"/></svg></i><b>VS AI</b><span>Quick match vs the computer</span></button>
       <button class="mode" id="go-online" type="button"><i class="mi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="17" r="6"/><circle cx="33" cy="19" r="5"/><path d="M5 38c0-7 5-11 11-11s11 4 11 11M29 29c6-1 14 2 14 9"/></svg></i><b>VS Friend</b><span>Online with a room code</span></button>
       <button class="mode" id="go-tour" type="button"><i class="mi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8h20v10a10 10 0 0 1-20 0zM14 12H7c0 6 3 9 7 10M34 12h7c0 6-3 9-7 10M24 28v7M16 40h16M19 35h10"/></svg></i><b>World Cup</b><span>Quarters to final. <em id="m-tour-v">New</em></span></button>
-<button class="mode" id="go-gk" type="button"><i class="mi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 40V20a4 4 0 0 1 8 0v-6a4 4 0 0 1 8 0v6a4 4 0 0 1 8 0v14c0 5-4 8-9 8h-6c-6 0-9-3-9-8z"/></svg></i><b>Keeper</b><span>Play as the goalkeeper. <em>Save everything</em></span></button>
+<button class="mode" id="go-mys" type="button"><i class="mi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 40V20a4 4 0 0 1 8 0v-6a4 4 0 0 1 8 0v6a4 4 0 0 1 8 0v14c0 5-4 8-9 8h-6c-6 0-9-3-9-8z"/></svg></i><b>Mystery Ball</b><span>Score, pick a power-up card. <em>Chaos</em></span></button>
     <button class="mode" id="go-practice" type="button"><i class="mi"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6v8M12 14l6 24M36 14l-6 24M16 42h16"/><circle cx="24" cy="30" r="3"/></svg></i><b>Practice</b><span>Drills &amp; free play. <em>Train your skills</em></span></button>
     </div>
   </section>
@@ -1632,7 +1639,7 @@ let toastT=0;
 function toast(msg,ms){const e=$('#toast');e.textContent=msg;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),ms||1100)}
 function banner(a,sub){const e=$('#banner');e.innerHTML=a+(sub?`<small>${sub}</small>`:'');e.classList.add('on')}
 function hideBanner(){$('#banner').classList.remove('on')}
-const S={shop:$('#screen-shop'),play:$('#screen-play'),online:$('#screen-online'),tour:$('#screen-tour'),home:$('#screen-home'),select:$('#screen-select'),pause:$('#screen-pause'),result:$('#screen-result'),skills:$('#screen-skills'),up:$('#screen-up'),how:$('#screen-how'),set:$('#screen-set'),daily:$('#screen-daily'),club:$('#screen-club')};
+const S={shop:$('#screen-shop'),play:$('#screen-play'),mys:$('#screen-mys'),online:$('#screen-online'),tour:$('#screen-tour'),home:$('#screen-home'),select:$('#screen-select'),pause:$('#screen-pause'),result:$('#screen-result'),skills:$('#screen-skills'),up:$('#screen-up'),how:$('#screen-how'),set:$('#screen-set'),daily:$('#screen-daily'),club:$('#screen-club')};
 function showScreen(n){for(const k in S)S[k].hidden=k!==n}
 function resetInput(){In.mx=In.my=In.mag=0;In.q.length=0;In.shoot=In.pass=In.thru=In.sprint=false;In.stickId=null;stickKnob.style.transform='';stickBase.style.left='';stickBase.style.bottom=''}
 function hideControls(){$('#controls').hidden=true;resetInput();$('#power').classList.remove('on')}
@@ -1663,7 +1670,7 @@ function renderSelect(){const y=byId(sel.you),o=byId(sel.opp);
  const slot=(el,n,k,act)=>{el.classList.toggle('act',act);el.innerHTML=`${jersey(n)}<div style="flex:1;min-width:0"><div class="k">${k} · OVR ${n.ovr}</div><div class="nm">${n.name}</div><div class="st">ATT ${n.att} · MID ${n.mid} · DEF ${n.def}</div></div>`};
  slot($('#slot-you'),y,sel.tour?'YOUR NATION':'YOUR TEAM',sel.active==='you'||sel.tour);slot($('#slot-opp'),o,'OPPONENT',sel.active==='opp');$('#slot-opp').style.display=sel.tour?'none':'';{const gk=$('#go-kick');gk.disabled=false;gk.style.opacity=''}$('#sel-title').textContent=sel.tour?'Pick your nation':'Choose nations';$('#go-kick').textContent=sel.tour?'Start':'Kick off';
  const chips=(id,items,cur)=>{$(id).innerHTML=items.map(([v,l])=>`<button class="chip ${v===cur?'on':''}" data-v="${v}" type="button">${l}</button>`).join('')};
- chips('#o-form',Object.keys(FORMS).filter(f=>!/v/.test(f)).map(f=>[f,f]),sel.form);chips('#o-size',[[0,'11v11'],[5,'5v5'],[3,'3v3']],sel.small);chips('#o-cards',[[1,'On'],[0,'Off']],Prefs.cards?1:0);$('#o-size').parentElement.style.display=sel.online||sel.tour||sel.pens||sel.gk?'none':'';$('#o-cards').parentElement.style.display=sel.pens||sel.online?'none':'';if(sel.small){$('#o-form').parentElement.style.display='none';$('#o-pitch').parentElement.style.display='none'}else if(!sel.online){$('#o-form').parentElement.style.display='';$('#o-pitch').parentElement.style.display=''}chips('#o-diff',DIFF.map((d,i)=>[i,d.n]),sel.diff);chips('#o-len',[[180,'3 min'],[240,'4 min'],[360,'6 min']],sel.len);chips('#o-pitch',[[0,'Standard'],[1,'Large'],[3,'Pro']],sel.pitch);$('#o-rules-wrap').style.display='none';{const mw=$('#o-mys-wrap');mw.style.display=(!sel.online&&!sel.tour&&!sel.gk&&!sel.pens)?'':'none';chips('#o-mys',[[0,'Off'],[1,'On']],sel.mys||0)}
+ chips('#o-form',Object.keys(FORMS).filter(f=>!/v/.test(f)).map(f=>[f,f]),sel.form);chips('#o-size',[[0,'11v11'],[5,'5v5'],[3,'3v3']],sel.small);chips('#o-cards',[[1,'On'],[0,'Off']],Prefs.cards?1:0);$('#o-size').parentElement.style.display=sel.online||sel.tour||sel.pens||sel.gk?'none':'';$('#o-cards').parentElement.style.display=sel.pens||sel.online?'none':'';if(sel.small){$('#o-form').parentElement.style.display='none';$('#o-pitch').parentElement.style.display='none'}else if(!sel.online){$('#o-form').parentElement.style.display='';$('#o-pitch').parentElement.style.display=''}chips('#o-diff',DIFF.map((d,i)=>[i,d.n]),sel.diff);chips('#o-len',[[180,'3 min'],[240,'4 min'],[360,'6 min']],sel.len);chips('#o-pitch',[[0,'Standard'],[1,'Large'],[3,'Pro']],sel.pitch);$('#o-rules-wrap').style.display='none';{const mw=$('#o-mys-wrap');mw.style.display='none'}
  {const w=$('#o-gkm-wrap');w.style.display=sel.gk?'':'none';if(sel.gk){chips('#o-gkm',[[0,'Full match'],[1,'Penalties only']],sel.gkm||0);$('#o-len').parentElement.style.display=sel.gkm?'none':''}}
  if(sel.online){renderRules();onlineSelectUI()}}
 function renderRules(){const names={mys:'Mystery Ball',first:'First to',stam:'Stamina',golden:'Golden goal'};$('#o-rules').innerHTML=Object.keys(RULE_DEF).map(k=>`<div class="rg"><span class="rl">${names[k]}</span><span class="chips" data-k="${k}">${RULE_DEF[k].map(([l,v])=>`<button class="chip ${sel.rules[k]===v?'on':''}" data-v="${v}" type="button">${l}</button>`).join('')}</span></div>`).join('')}
@@ -1802,7 +1809,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=61;
+const NK_BUILD=62;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
@@ -1875,10 +1882,10 @@ function onlineSelectUI(){if(!sel.online)return;const o=peerOf(),mine=NET.role==
  for(const id of['#o-diff','#o-len','#o-pitch','#o-size','#o-rules'])$(id).parentElement.style.display=mine&&id!=='#o-diff'?'':'none';
  if(mine&&sel.small)$('#o-pitch').parentElement.style.display='none';
  const rt=mine?'':rulesText(o&&o.presence&&o.presence.cfg||{});const rl=$('#rules-note');if(rl){rl.hidden=mine||!rt;rl.textContent=rt?'Host rules: '+rt:''}}
-const RULE_DEF={mys:[['Off',0],['On',1]],first:[['Off',0],['3',3],['5',5],['10',10]],stam:[['Normal',0],['Infinite',1]],golden:[['Off',0],['On',1]]};
+const RULE_DEF={first:[['Off',0],['3',3],['5',5],['10',10]],stam:[['Normal',0],['Infinite',1]],golden:[['Off',0],['On',1]]};
 function rulesText(c){const r=c.rules||c,a=[];if(c.sm)a.push(c.sm+'v'+c.sm);if(r.mys)a.push('Mystery Ball');if(r.first)a.push('First to '+r.first);if(r.stam)a.push('Infinite stamina');if(r.golden)a.push('Golden goal');return a.join(' · ')}
-function netPubCfg(){if(NET.role==='host')netPresence({cfg:{sm:sel.small||0,rules:Object.assign({},sel.rules)}})}
-async function onlineNationPicked(){await netPresence({nat:sel.you,form:sel.form,rdy:false,cfg:NET.role==='host'?{sm:sel.small||0,rules:Object.assign({},sel.rules)}:undefined});onlineSelectUI()}
+function netPubCfg(){if(NET.role==='host')netPresence({cfg:{sm:sel.small||0,rules:Object.assign({},sel.rules,{mys:sel.mys?1:0})}})}
+async function onlineNationPicked(){await netPresence({nat:sel.you,form:sel.form,rdy:false,cfg:NET.role==='host'?{sm:sel.small||0,rules:Object.assign({},sel.rules,{mys:sel.mys?1:0})}:undefined});onlineSelectUI()}
 function onlineGoClick(){if(NET.role==='host'){const o=peerOf();if(o&&o.presence.rdy)netHostStart(o.presence)}
  else{const me=NET.room.peers().find(p=>p.isMe);netPresence({rdy:!(me&&me.presence.rdy)}).then(()=>setTimeout(onlineSelectUI,60))}}
 $('#go-online').onclick=()=>{Snd.init();sel.small=0;msgOn('Build '+NK_BUILD+' · '+(window.Peer?'connection ready':'connecting…'));if(!window.Peer)loadPeerLib().then(ok=>{if(!$('#on-msg').textContent.startsWith('Build'))return;msgOn('Build '+NK_BUILD+' · '+(ok?'connection ready':'could not load multiplayer library'))});$('#on-code').value='';showScreen('online')};
@@ -1900,7 +1907,7 @@ $('#on-code').addEventListener('input',e=>{e.target.value=e.target.value.toUpper
 $('#dc-leave').onclick=()=>leaveOnline();
 
 /* ---- starting a match ---- */
-function netHostStart(gp){netWrapHost();const cfg={id:(Date.now()%1e9)+1,host:sel.you,guest:gp.nat,hf:sel.form,gf:gp.form||'4-3-3',len:sel.len,pitch:sel.pitch,sm:sel.small||0,rules:Object.assign({},sel.rules)};
+function netHostStart(gp){netWrapHost();const cfg={id:(Date.now()%1e9)+1,host:sel.you,guest:gp.nat,hf:sel.form,gf:gp.form||'4-3-3',len:sel.len,pitch:sel.pitch,sm:sel.small||0,rules:Object.assign({},sel.rules,{mys:sel.mys?1:0})};
  const sm=cfg.sm;if(sm){cfg.hf=cfg.gf=sm+'v'+sm}
  Snd.init();setPitch(sm?2:cfg.pitch);buildMatch({you:cfg.host,opp:cfg.guest,form:cfg.hf,form1:cfg.gf,diff:1,len:cfg.len,online:'host',rules:cfg.rules});
  G.teams[1].skill=gp.skill||'roulette';NET.gone=false;NET.snaps=[];NET.evs=[];NETEV.length=0;NET.frame=0;NETIN.q.length=0;NET.lastQ=0;NET.rm=[];NET.rmN=0;
@@ -2809,7 +2816,7 @@ const _smOrig=startMatch;startMatch=function(){_smOrig();if(sel.gk){gkSetup();if
 function gkPensOnly(){G.state='play';G.recorded=true;startShootout(G.teams[0].nat.id,G.teams[1].nat.id,sel.diff|0,(a,c)=>{G.pkRes=[a,c];G.half=2;G.state='full';hideControls();showResult(true)},{keep:true,prev:'none'})}
 const _bm2=buildMatch;buildMatch=function(o){G.gkMode=false;G.fpS=null;G.fpC=null;return _bm2(o)};
 const _upd2=update;update=function(dt){if(G.gkMode)gkLabels();return _upd2(dt)};
-$('#go-gk').onclick=()=>{Snd.init();sel.small=0;sel.pens=false;sel.tour=false;sel.online=false;sel.gk=1;showScreen('select');renderSelect()};
+$('#go-gk')&&($('#go-gk').onclick=()=>{Snd.init();sel.small=0;sel.pens=false;sel.tour=false;sel.online=false;sel.gk=1;showScreen('select');renderSelect()});
 for(const id of['#go-vsai','#go-tour','#go-online'])$(id).addEventListener('click',()=>{sel.gk=0});
 
 /* ---------- graphics setting: Retro Blocks (classic) / 3D Models (animated characters) ---------- */
@@ -2855,6 +2862,10 @@ function perfTick(ms){if(!(ms>0)||ms>250||G.state==='menu'||G.paused||document.h
 $('#s-perf').onclick=()=>{Prefs.perf=Prefs.perf==='auto'?'low':Prefs.perf==='low'?'high':'auto';LSx.set('nk_perf',Prefs.perf);PERF.rs=Prefs.perf==='low'?.7:1;PERF.acc=PERF.n=0;PERF.cool=2;try{fit()}catch(e){};syncSet()};
 syncSet();
 $('#o-mys').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;sel.mys=Number(c.dataset.v);renderSelect()});
+$('#go-mys').onclick=()=>{showScreen('mys')};$('#mys-back').onclick=()=>showScreen('play');
+$('#go-mys-ai').onclick=()=>{sel.gk=0;sel.mys=1;$('#go-vsai').onclick()};
+$('#go-mys-fr').onclick=()=>{sel.gk=0;sel.mys=1;$('#go-online').onclick()};
+for(const id of['#go-vsai','#go-online','#go-tour','#go-practice'])$(id).addEventListener('click',()=>{sel.mys=0},true);
 /* ================= PENALTIES IN THE REAL GAME =================
    Shootouts and in-match penalties now play on the match pitch with the match players, camera and controls.
    You take your own kicks (aim with the stick, hold SHOOT) and you are the keeper when the other side kicks (stick + DIVE). */
