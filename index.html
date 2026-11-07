@@ -491,6 +491,7 @@ button{transition:transform .1s,filter .12s}button:active{transform:scale(.95)}
       <div class="setrow"><div><b>Graphics</b><span>Retro Blocks (classic) or 3D Models (animated characters)</span></div><button class="chip" id="s-gfx" type="button">Retro Blocks</button></div>
       <div class="setrow"><div><b>Camera</b><span>Broadcast view or first person (stick turns you)</span></div><button class="chip" id="s-cam" type="button">Broadcast</button></div>
       <div class="setrow"><div><b>Skill camera</b><span>First person only: the view spins and sways during skill moves</span></div><button class="chip" id="s-skcam" type="button">Off</button></div>
+      <div class="setrow"><div><b>Performance</b><span>Auto lowers the sharpness when your phone struggles. Low is the smoothest.</span></div><button class="chip" id="s-perf" type="button">Auto</button></div>
       <div class="setrow" id="s-aim-row" hidden><div><b>Auto-aim (admin)</b><span>Every shot goes top bins, from anywhere</span></div><button class="chip" id="s-aim" type="button">Off</button></div>
       <div class="setrow"><div><b>Controls guide</b><span>How every button works</span></div><button class="chip" id="go-how" type="button">Open</button></div>
     </div>
@@ -1443,7 +1444,7 @@ function G_planeXZ(w,d,ur,vr){return{P:[-w/2,0,-d/2,w/2,0,-d/2,w/2,0,d/2,-w/2,0,
 
 function initGL(){
  try{
-  const canvas=$('#gl'),gl=canvas.getContext('webgl',{antialias:true,alpha:false,powerPreference:'high-performance'});if(!gl)throw new Error('no webgl');
+  const canvas=$('#gl'),gl=canvas.getContext('webgl',{antialias:(window.devicePixelRatio||1)<1.6,alpha:false,powerPreference:'high-performance'});if(!gl)throw new Error('no webgl');
   const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(o));return o};
   const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,VS));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS));gl.bindAttribLocation(pr,0,'aP');gl.bindAttribLocation(pr,1,'aN');gl.bindAttribLocation(pr,2,'aT');gl.linkProgram(pr);
   if(!gl.getProgramParameter(pr,gl.LINK_STATUS))throw new Error('link');gl.useProgram(pr);
@@ -1797,7 +1798,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=59;
+const NK_BUILD=60;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
@@ -2832,6 +2833,21 @@ function fpSkill(u){if(!Prefs.skcam||!(u.skillT>0)||!u.skillKind)return null;con
  else if(k==='earthquake'||k==='shockwave'){dip=Math.sin(x*60)*3*(1-x);fov=pulse*.08}
  else{const sw=Math.sin(x*PI);lat=s*sw*18;yaw=s*sw*.38;roll=s*sw*.12;dip=-sw*2.5}   // turns, feints, drags, cuts: lean and swing into the move
  return{yaw,lat,dip,fov,roll}}
+
+/* ---------- performance: render scale adapts to the device so the game stays smooth ---------- */
+Prefs.perf=LSx.get('nk_perf','auto');
+const PERF={rs:1,acc:0,n:0,cool:0,good:0,slow:0};
+if(Prefs.perf==='low')PERF.rs=.7;
+fit=function(){const cap=Prefs.perf==='low'?1:1.75,dpr=Math.min(window.devicePixelRatio||1,cap)*PERF.rs;const w=cv.clientWidth,h=cv.clientHeight;cv.width=Math.max(2,Math.round(w*dpr));cv.height=Math.max(2,Math.round(h*dpr));if(GL){const g=$('#gl');g.width=cv.width;g.height=cv.height}};
+function perfTick(ms){if(!(ms>0)||ms>250||G.state==='menu'||G.paused||document.hidden)return;if(Prefs.perf!=='auto')return;
+ PERF.acc+=ms;PERF.n++;if(PERF.n<45)return;const avg=PERF.acc/PERF.n;PERF.acc=PERF.n=0;
+ if(PERF.cool>0){PERF.cool--;return}
+ if(avg>25){PERF.slow++;PERF.good=0}else if(avg<17.5){PERF.good++;PERF.slow=0}else{PERF.slow=PERF.good=0}
+ if(PERF.slow>=2&&PERF.rs>.56){PERF.rs=Math.max(.55,+(PERF.rs-.15).toFixed(2));PERF.slow=0;PERF.cool=3;try{fit()}catch(e){};syncSet()}
+ else if(PERF.good>=8&&PERF.rs<1){PERF.rs=Math.min(1,+(PERF.rs+.1).toFixed(2));PERF.good=0;PERF.cool=3;try{fit()}catch(e){};syncSet()}}
+{const old=syncSet;syncSet=function(){old();const b=$('#s-perf');if(b){b.textContent=Prefs.perf==='auto'?'Auto'+(PERF.rs<1?' ('+Math.round(PERF.rs*100)+'%)':''):Prefs.perf==='low'?'Low':'High';b.classList.toggle('on',Prefs.perf!=='auto')}}}
+$('#s-perf').onclick=()=>{Prefs.perf=Prefs.perf==='auto'?'low':Prefs.perf==='low'?'high':'auto';LSx.set('nk_perf',Prefs.perf);PERF.rs=Prefs.perf==='low'?.7:1;PERF.acc=PERF.n=0;PERF.cool=2;try{fit()}catch(e){};syncSet()};
+syncSet();
 /* ================= PENALTIES IN THE REAL GAME =================
    Shootouts and in-match penalties now play on the match pitch with the match players, camera and controls.
    You take your own kicks (aim with the stick, hold SHOOT) and you are the keeper when the other side kicks (stick + DIVE). */
@@ -2915,7 +2931,7 @@ const _sr4=showResult;showResult=function(full){_sr4(full);if(full&&G.pkRes&&G.g
 updateMenu();
 /* ================= LOOP ================= */
 let last=0;
-function frame(ts){requestAnimationFrame(frame);const dt=Math.min(.033,Math.max(0,(ts-last)/1000)||0);last=ts;
+function frame(ts){requestAnimationFrame(frame);perfTick(ts-last);const dt=Math.min(.033,Math.max(0,(ts-last)/1000)||0);last=ts;
  if(G.state!=='menu'&&G.ball){if(G.online==='guest')netGuestFrame(dt);else{if(!G.paused&&!SO)update(dt);if(G.online==='host'&&NET.room)netHostTick(dt)}if(!SO)render();hud()}}
 buildPitch();initGL();fit();requestAnimationFrame(frame);
 window.__nk={fpSkill:u=>fpSkill(u),pkStart:(...a)=>pkStart(...a),pkUpdate,Club,clubNat,MARKET,cardPrice,PCS,pcOpen,cardBonus,Daily,foul,resolveFoul,startPenaltyKick,startShootout,so:()=>SO,G,In,sel,startMatch,tackle,simShot,startPractice,LEVELS,PB:()=>PB,FPV,fpMove,autoAimShot,L:()=>L,W:()=>W,setOwner,act,doSkill,doShoot,doPass,netHostStart,netGuestStart,hostSnap,guestApply,update,render,NATIONS,Prefs,NET,NETIN,rollPack,PACKS,SKILLS,SKD,awardMatch,tour:()=>T,tourFinish,newTour,renderTour};
