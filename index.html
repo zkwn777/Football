@@ -1810,7 +1810,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=63;
+const NK_BUILD=64;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
@@ -2048,7 +2048,7 @@ const Cloud={doc:null,t:0,ok:false,
  push(){if(!this.ok||!this.doc)return;clearTimeout(this.t);this.t=setTimeout(()=>{try{this.doc.set(Prefs.snap()).catch(()=>{})}catch(e){}},500)}};
 Cloud.init();
 
-/* ---- admin panel (code 7777) ---- */
+/* ---- admin panel (code 9999) ---- */
 (()=>{const st=document.createElement('style');st.textContent=`#adm-btn{position:absolute;right:10px;bottom:8px;z-index:3;padding:5px 10px;font-size:11px;opacity:.55;letter-spacing:.08em}
 #overlay-admin{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(4,8,16,.88)}
 #overlay-admin[hidden]{display:none}
@@ -2061,7 +2061,7 @@ const ov=document.createElement('div');ov.id='overlay-admin';ov.hidden=true;ov.i
 const box=$('#adm-box');
 const close=()=>{ov.hidden=true};
 function login(){box.innerHTML='<h3>ADMIN</h3><input id="adm-code" type="password" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="off"><div id="adm-msg"></div><div class="row"><button class="ghost" id="adm-x" type="button">Cancel</button><button class="cta" id="adm-ok" type="button">Enter</button></div>';
- const inp=$('#adm-code'),go=()=>{if(inp.value==='7777')panel();else{$('#adm-msg').textContent='Wrong code';inp.value='';inp.focus()}};
+ const inp=$('#adm-code'),go=()=>{if(inp.value==='9999')panel();else{$('#adm-msg').textContent='Wrong code';inp.value='';inp.focus()}};
  $('#adm-ok').onclick=go;$('#adm-x').onclick=close;inp.onkeydown=e=>{if(e.key==='Enter')go()};setTimeout(()=>inp.focus(),50)}
 function panel(){box.innerHTML=`<h3>ADMIN PANEL</h3><div style="color:#cfd8ea;font-size:14px">Coins: <b id="adm-c">${fmt(Prefs.coins)}</b></div><button class="cta" id="adm-money" type="button">Set money to 9,999</button><button class="cta" id="adm-inf" type="button">${Prefs.inf?'Infinite money: ON (tap to turn off)':'Infinite money: OFF (tap to turn on)'}</button><button class="cta" id="adm-aim" type="button">${Prefs.aim?'Auto-aim: ON (tap to turn off)':'Auto-aim: OFF (tap to turn on)'}</button><button class="cta" id="adm-unlock" type="button">Unlock every skill</button><button class="ghost" id="adm-reset" type="button">Reset progress</button><div id="adm-msg" style="color:#38d66b"></div><div class="row"><button class="ghost" id="adm-x" type="button">Close</button></div>`;
  $('#adm-inf').onclick=()=>{Prefs.inf=!Prefs.inf;try{localStorage.setItem('nk_inf',Prefs.inf?'1':'0')}catch(e){}Prefs.coins=Prefs.inf?999999999:9999;Prefs.save();coinsUI();updateMenu();panel();$('#adm-msg').textContent=Prefs.inf?'Infinite money on: nothing costs coins':'Infinite money off: set to 9,999'};
