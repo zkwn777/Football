@@ -1817,7 +1817,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=73;
+const NK_BUILD=74;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
@@ -3044,12 +3044,12 @@ function cmDecode(){if(cmReady)return;cmReady=true;try{cmCtx=cmCtx||new(window.A
 function cmPlay(id,done){const gen=cmGen;let fin=false;const fn=()=>{if(fin)return;fin=true;if(gen===cmGen)done()};
  try{if(!cmCtx||!cmBuf[id]){setTimeout(fn,300);return}if(cmCtx.state==='suspended')cmCtx.resume();const s=cmCtx.createBufferSource(),g=cmCtx.createGain();s.buffer=cmBuf[id];g.gain.value=1;s.connect(g);g.connect(cmCtx.destination);s.onended=fn;cmSrc=s;s.start(0);setTimeout(fn,s.buffer.duration*1000+800)}catch(e){setTimeout(fn,300)}}
 function cmPick(arr){let id,n=0;do{id=arr[Math.floor(Math.random()*arr.length)]}while(id===cmLastId&&arr.length>1&&n++<8);cmLastId=id;return id}
-function cmPump(){if(cmBusy||!Prefs.cm)return;if(cmGap>performance.now())return;let id=cmQ.shift();if(!id){if(G.state!=='play'||G.practice||G.mysPick||G.replay)return;id=cmPick(CMK.flow)}
- cmBusy=true;cmPlay(id,()=>{cmBusy=false;cmGap=performance.now()+300+Math.random()*900;setTimeout(cmPump,350)})}
+function cmPump(){if(cmBusy||!Prefs.cm)return;if(cmGap>performance.now())return;let id=cmQ.shift();if(!id){if(G.state==='menu'||G.state==='half'||G.state==='full'||G.practice||G.mysPick||G.replay)return;id=cmPick(CMK.flow)}
+ cmBusy=true;cmPlay(id,()=>{cmBusy=false;cmGap=0;cmPump()})}
 function cmCancel(){cmGen++;cmBusy=false;try{cmSrc&&cmSrc.stop()}catch(e){}cmSrc=null}
 function cmSay(k,pri){if(!Prefs.cm||G.state==='menu'||G.practice)return;cmDecode();
  if(k==='goal'){cmCancel();cmGap=0;cmQ=[cmPick(CMK.goal)]}
- else if(CMEV[k]){if(pri){if(cmQ.length>1)return;if(k!=='start'&&cmBusy&&performance.now()-cmT0<2500)return;cmCancel();cmGap=0;cmQ=[cmPick(CMK.big)]}else{if(cmQ.length>0||cmBusy)return;cmQ.push(cmPick(CMK.big))}}
+ else if(CMEV[k]){if(cmQ.length>0)return;if(pri&&(k==='half'||k==='full'||k==='start')){cmCancel();cmGap=0}cmQ.push(cmPick(CMK.big))}
  else return;
  cmT0=performance.now();cmPump()}
 let cmT0=0;
