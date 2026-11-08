@@ -1817,7 +1817,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=70;
+const NK_BUILD=71;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
@@ -3032,41 +3032,46 @@ setInterval(()=>{try{const hud=document.getElementById('hud'),on=mysOn()&&G.team
  if(on){const c=t.pu?MYSB[t.pu]:null;mysPill.hidden=false;mysPill.className=c&&c.r?'rare':'';mysPill.textContent=c?c.e+' '+c.n:'No card yet';
   const gh=t.pu==='ghost';mysBtn.hidden=!gh;if(gh){const act=G.inv&&G.inv.team===t,cd=Math.ceil(t.puCd||0);mysBtn.disabled=act||cd>0;mysBtn.textContent=act?'GHOST '+Math.ceil(G.inv.t)+'s':cd>0?'GHOST '+Math.max(0,cd-(act?0:0))+'s':'GHOST'}}
  else{mysPill.hidden=true;mysBtn.hidden=true}}catch(e){}},150);
-/* ================= ARABIC COMMENTARY (speech synthesis + captions) ================= */
-const CM={goal:[['جووووووول! يا سلام!','GOOOAL! Wonderful!'],['الله الله الله! جول جول جول!','Allah Allah Allah! Goal goal goal!'],['ما شاء الله! هدف رائع!','Mashallah! What a goal!'],['جوووول! لا يصدق!','Goal! Unbelievable!']],
- shot:[['ياااا! تسديدة قوية!','Ooh! Powerful shot!'],['شووووت!','Shoooot!'],['خطير! خطير!','Dangerous! Dangerous!'],['اتجاه المرمى!','Towards goal!']],
- save:[['يا سلام على الحارس!','Wow, what a keeper!'],['إنقاذ رائع!','Great save!'],['مستحيل! مستحيل!','Impossible! Impossible!'],['الله يحفظ الحارس!','What a goalkeeper!']],
- foul:[['خطأ! يا حكم!','Foul! Referee!'],['صافرة الحكم!','The whistle!'],['لا لا لا! خطأ واضح!','No no no! Clear foul!']],
- corner:[['ركنية خطيرة!','Dangerous corner!'],['ركنية! انتبهوا يا شباب!','Corner! Watch out, lads!']],
- throw:[['رمية تماس','Throw-in']],goalkick:[['ركلة مرمى','Goal kick']],
- start:[['انطلقت المباراة! يا هلا!','The match has started! Welcome!']],
- half:[['نهاية الشوط! ما شاء الله على اللعب!','Half over! Great football!']],full:[['صافرة النهاية! مباراة جميلة!','Full time! A lovely match!']],
- idle:[['تمريرة جميلة يا جماعة!','Lovely pass, everyone!'],['ضغط رهيب في الملعب!','Terrific pressure out there!'],['لعب جميل من الفريقين!','Beautiful play from both teams!'],['الجمهور يهتف!','The crowd is chanting!'],['إيش هذا الجمال!','What is this beauty!'],['الكرة تتحرك بسرعة!','The ball is moving fast!'],['يا الله! لعبة قوية!','Oh my! Strong game!']]};
+/* ================= ARABIC COMMENTARY: one continuous excited commentator ================= */
+const CM={goal:['جووووووووووووووول!!!','جول! جول! جول! جول! يا الله يا الله يا الله!','هذا هدف خرافي! لا يصدق! ما شاء الله ما شاء الله!','شوفوا هالجمال! هذا مو طبيعي! هدف للتاريخ يا جماعة!'],
+ shot:['تسديييييدة! يا الله ما أقواها!','شووووت! خطير خطير خطير!'],
+ save:['يا الله! إنقاذ خرافي من الحارس! مستحيل مستحيل!','الحارس يطير! ما شاء الله عليه! إنقاذ لا يصدق!'],
+ foul:['خطأ! خطأ واضح! يا حكم أين أنت!','صافرة! هذا خطأ يا جماعة!'],
+ corner:['ركنية خطيرة جداً! انتبهوا انتبهوا!'],throw:['رمية تماس! يا الله!'],goalkick:['ركلة مرمى!'],
+ start:['انطلقت المباراة! يا هلا يا هلا! مباراة نار اليوم!'],
+ half:['نهاية الشوط! ما شاء الله على هذا اللعب! شوط مجنون!'],full:['صافرة النهاية! يا لها من مباراة! ما شاء الله!'],
+ attack:['الكرة تتقدم! هجمة خطيرة جداً! انتبهوا انتبهوا!','يا الله! يتقدم بالكرة! الدفاع في ورطة!','تمريرة وراء تمريرة! الضغط على المرمى! يا سلام!','هجمة بسرعة البرق! الكل يصرخ!'],
+ mid:['الكرة في وسط الملعب! لعب جميل! تمريرات سريعة!','الفريقان يلعبان بحماس! المباراة نار يا جماعة!','يا سلام على هذا اللعب! كرة جميلة جداً!','الجمهور واقف على رجليه! ما هذه المباراة!'],
+ loose:['الكرة حرة! من يسبق من! صراع قوي على الكرة!','ضغط رهيب! الكل يجري! هذه مباراة نار!','احتكاك قوي! الكرة تتنقل! يا الله!'],
+ def:['الدفاع يتراجع! الخصم يضغط! انتبهوا!','محاولة للخروج بالكرة من الدفاع! يا رب سلامة!','الخطر قريب من المرمى! يا جماعة انتبهوا!']};
 Prefs.cm=LSx.get('nk_cm','1')==='1';
-let cmLast=0,cmV=null;
+let cmV=null,cmA=null,cmQ=[],cmBusy=false,cmGen=0,cmLastLine='';
 function cmVoice(){try{const v=speechSynthesis.getVoices();return cmV=v.find(x=>/^ar/i.test(x.lang))||null}catch(e){return null}}
 try{speechSynthesis.onvoiceschanged=cmVoice}catch(e){}
-const cmEl=document.createElement('div');cmEl.id='cm';document.body.appendChild(cmEl);
-{const st=document.createElement('style');st.textContent='#cm{position:fixed;left:50%;top:max(84px,calc(env(safe-area-inset-top) + 74px));transform:translateX(-50%);z-index:34;pointer-events:none;text-align:center;opacity:0;transition:opacity .25s;max-width:80vw;padding:4px 14px;border-radius:12px;background:rgba(8,12,22,.6)}#cm.on{opacity:1}#cm b{display:block;font-size:clamp(16px,4.6vh,26px);color:#ffe27a;direction:rtl;font-weight:800}#cm small{display:block;font-size:clamp(10px,2.6vh,13px);color:#d4deef;opacity:.85}';document.head.appendChild(st)}
-let cmT=0;
-function cmSay(k,pri){if(!Prefs.cm||G.state==='menu'||G.practice)return;const now=performance.now();if(!pri&&now-cmLast<4200)return;if(pri&&now-cmLast<900&&pri<2)return;cmLast=now;
- const a=CM[k],l=a[Math.floor(Math.random()*a.length)]; cmSpeak(l[0],k)}
-let cmA=null,cmU=null,cmTok=0;
-function cmWeb(text,k){try{cmA=cmA||new Audio();cmA.pause();cmA.src='https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ar&q='+encodeURIComponent(text);cmA.volume=.9;cmA.playbackRate=k==='goal'?1.05:1.15;const pr=cmA.play();if(pr&&pr.catch)pr.catch(()=>{})}catch(e){}}
-function cmSpeak(text,k){const tok=++cmTok,v=cmV||cmVoice();
- if(window.speechSynthesis&&v){try{if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);cmU=u;u.lang=v.lang||'ar-SA';u.voice=v;u.rate=k==='goal'?1.05:1.2;u.pitch=k==='goal'?1.5:1.25;u.volume=.9;let st=false;u.onstart=()=>{st=true};u.onerror=()=>{if(!st&&tok===cmTok)cmWeb(text,k)};speechSynthesis.resume();speechSynthesis.speak(u);setTimeout(()=>{if(!st&&tok===cmTok){try{speechSynthesis.cancel()}catch(e){}cmWeb(text,k)}},1500);return}catch(e){}}
- cmWeb(text,k)}
-function cmStop(){cmTok++;try{speechSynthesis.cancel()}catch(e){}try{cmA&&cmA.pause()}catch(e){}cmEl.classList.remove('on')}
+function cmWeb(text,k,done){try{cmA=cmA||new Audio();cmA.pause();cmA.onended=done;cmA.onerror=done;cmA.src='https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ar&q='+encodeURIComponent(text);cmA.volume=1;cmA.playbackRate=1.25;const pr=cmA.play();if(pr&&pr.catch)pr.catch(()=>done())}catch(e){done()}}
+function cmUtter(it,done){const gen=cmGen;let fin=false;const fn=()=>{if(fin)return;fin=true;if(gen===cmGen)done()};setTimeout(fn,3000+it.t.length*260);
+ const big=it.big,v=cmV||cmVoice();
+ if(window.speechSynthesis&&v){try{const u=new SpeechSynthesisUtterance(it.t);u.lang=v.lang||'ar-SA';u.voice=v;u.rate=big?1.0:1.3;u.pitch=big?1.9:1.55;u.volume=1;let st=false;u.onstart=()=>{st=true};u.onend=fn;u.onerror=()=>{if(!st&&gen===cmGen&&!fin){fin=true;cmWeb(it.t,it.k,()=>{if(gen===cmGen)done()})}else fn()};speechSynthesis.resume();speechSynthesis.speak(u);setTimeout(()=>{if(!st&&gen===cmGen&&!fin){fin=true;try{speechSynthesis.cancel()}catch(e){}cmWeb(it.t,it.k,()=>{if(gen===cmGen)done()})}},1800);return}catch(e){}}
+ cmWeb(it.t,it.k,fn)}
+function cmPump(){if(cmBusy||!Prefs.cm)return;let it=cmQ.shift();if(!it){if(G.state!=='play'||G.practice||G.mysPick||G.replay)return;it=cmFlow()}if(!it)return;cmBusy=true;cmUtter(it,()=>{cmBusy=false;setTimeout(cmPump,50)})}
+function cmFlow(){const b=G.ball;if(!b)return null;const o=b.owner;let k='loose';if(o){const gx=goalX(o.team),d=Math.abs(o.x-gx);k=d<330?'attack':d>L-300?'def':'mid'}
+ const a=CM[k];let t,n=0;do{t=a[Math.floor(Math.random()*a.length)]}while(t===cmLastLine&&a.length>1&&n++<6);cmLastLine=t;return{t,k}}
+function cmCancel(){cmGen++;cmBusy=false;try{speechSynthesis.cancel()}catch(e){}try{cmA&&cmA.pause()}catch(e){}}
+function cmSay(k,pri){if(!Prefs.cm||G.state==='menu'||G.practice)return;
+ if(k==='goal'||k==='half'||k==='full'||k==='start'){cmCancel();cmQ=k==='goal'?CM.goal.map(t=>({t,k,big:true})):[{t:CM[k][0],k,big:k!=='start'}]}
+ else if(pri){if(cmQ.length>2)return;cmCancel();cmQ=[{t:CM[k][Math.floor(Math.random()*CM[k].length)],k,big:k==='save'}]}
+ else{if(cmQ.length>1||cmBusy)return;cmQ.push({t:CM[k][Math.floor(Math.random()*CM[k].length)],k})}
+ cmPump()}
+function cmStop(){cmQ=[];cmCancel()}
 {const g0=goal;goal=function(sc){const r=g0(sc);cmSay('goal',2);return r};
- const s0=doShoot;doShoot=function(p,a,b,c){const r=s0(p,a,b,c);if(G.ball&&G.ball.shot===p.team&&Math.random()<.45)cmSay('shot');return r};
+ const s0=doShoot;doShoot=function(p,a,b,c){const r=s0(p,a,b,c);if(G.ball&&G.ball.shot===p.team&&Math.random()<.5)cmSay('shot',1);return r};
  const k0=keeperSave;keeperSave=function(g,s){const n=g.team.st.saves,r=k0(g,s);if(g.team.st.saves>n)cmSay('save',1);return r};
  const f0=foul;foul=function(p,v,s){const st=G.state,r=f0(p,v,s);if(G.state==='foul'&&st!=='foul')cmSay('foul',1);return r};
  const d0=startDead;startDead=function(type,team,x,y){const r=d0(type,team,x,y);if(CM[type]&&Math.random()<.7)cmSay(type);return r};
  const e0=endHalf;endHalf=function(){const r=e0();if(G.state==='half')cmSay('half',2);else if(G.state==='full')cmSay('full',2);return r};
- let ps='',idleT=14;const u0=update;update=function(dt){const st=G.state;const r=u0(dt);if(st==='kickoff'&&G.state==='play'&&G.elapsed<2)cmSay('start',1);
-  if(G.state==='play'&&!G.practice){idleT-=dt;if(idleT<=0){idleT=16+Math.random()*16;cmSay('idle')}}return r};
+ const u0=update;update=function(dt){const st=G.state;const r=u0(dt);if(st==='kickoff'&&G.state==='play'&&G.elapsed<2)cmSay('start',1);return r};
  const b0=buildMatch;buildMatch=function(o){cmStop();return b0(o)};
- let lastSc=-1;setInterval(()=>{if(G.online==='guest'&&G.teams.length){const s=G.teams[0].score+G.teams[1].score;if(lastSc>=0&&s>lastSc)cmSay('goal',2);lastSc=s}else lastSc=-1;if(G.state==='menu'&&cmEl.classList.contains('on'))cmStop()},300)}
+ let lastSc=-1;setInterval(()=>{if(G.online==='guest'&&G.teams.length){const s=G.teams[0].score+G.teams[1].score;if(lastSc>=0&&s>lastSc)cmSay('goal',2);lastSc=s}else lastSc=-1;if(G.state==='menu')cmStop();else cmPump()},400)}
 let cmUnl=false;
 function cmUnlock(){if(cmUnl)return;cmUnl=true;try{if(window.speechSynthesis){const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.lang='ar-SA';speechSynthesis.speak(u)}}catch(e){}
  try{cmA=cmA||new Audio();cmA.src='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';const p=cmA.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}cmVoice()}
