@@ -1817,7 +1817,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=68;
+const NK_BUILD=69;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
@@ -3050,8 +3050,13 @@ const cmEl=document.createElement('div');cmEl.id='cm';document.body.appendChild(
 {const st=document.createElement('style');st.textContent='#cm{position:fixed;left:50%;top:max(84px,calc(env(safe-area-inset-top) + 74px));transform:translateX(-50%);z-index:34;pointer-events:none;text-align:center;opacity:0;transition:opacity .25s;max-width:80vw;padding:4px 14px;border-radius:12px;background:rgba(8,12,22,.6)}#cm.on{opacity:1}#cm b{display:block;font-size:clamp(16px,4.6vh,26px);color:#ffe27a;direction:rtl;font-weight:800}#cm small{display:block;font-size:clamp(10px,2.6vh,13px);color:#d4deef;opacity:.85}';document.head.appendChild(st)}
 let cmT=0;
 function cmSay(k,pri){if(!Prefs.cm||G.state==='menu'||G.practice)return;const now=performance.now();if(!pri&&now-cmLast<4200)return;if(pri&&now-cmLast<900&&pri<2)return;cmLast=now;
- const a=CM[k],l=a[Math.floor(Math.random()*a.length)]; try{if(!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(l[0]);u.lang='ar-SA';const v=cmV||cmVoice();if(v)u.voice=v;u.rate=k==='goal'?1.05:1.2;u.pitch=k==='goal'?1.5:1.25;u.volume=.9;speechSynthesis.speak(u)}catch(e){}}
-function cmStop(){try{speechSynthesis.cancel()}catch(e){}cmEl.classList.remove('on')}
+ const a=CM[k],l=a[Math.floor(Math.random()*a.length)]; cmSpeak(l[0],k)}
+let cmA=null,cmU=null,cmTok=0;
+function cmWeb(text,k){try{cmA=cmA||new Audio();cmA.pause();cmA.src='https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ar&q='+encodeURIComponent(text);cmA.volume=.9;cmA.playbackRate=k==='goal'?1.05:1.15;const pr=cmA.play();if(pr&&pr.catch)pr.catch(()=>{})}catch(e){}}
+function cmSpeak(text,k){const tok=++cmTok,v=cmV||cmVoice();
+ if(window.speechSynthesis&&v){try{if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);cmU=u;u.lang=v.lang||'ar-SA';u.voice=v;u.rate=k==='goal'?1.05:1.2;u.pitch=k==='goal'?1.5:1.25;u.volume=.9;let st=false;u.onstart=()=>{st=true};u.onerror=()=>{if(!st&&tok===cmTok)cmWeb(text,k)};speechSynthesis.resume();speechSynthesis.speak(u);setTimeout(()=>{if(!st&&tok===cmTok){try{speechSynthesis.cancel()}catch(e){}cmWeb(text,k)}},1500);return}catch(e){}}
+ cmWeb(text,k)}
+function cmStop(){cmTok++;try{speechSynthesis.cancel()}catch(e){}try{cmA&&cmA.pause()}catch(e){}cmEl.classList.remove('on')}
 {const g0=goal;goal=function(sc){const r=g0(sc);cmSay('goal',2);return r};
  const s0=doShoot;doShoot=function(p,a,b,c){const r=s0(p,a,b,c);if(G.ball&&G.ball.shot===p.team&&Math.random()<.45)cmSay('shot');return r};
  const k0=keeperSave;keeperSave=function(g,s){const n=g.team.st.saves,r=k0(g,s);if(g.team.st.saves>n)cmSay('save',1);return r};
