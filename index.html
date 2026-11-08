@@ -1094,7 +1094,7 @@ let spd=(I.sprint&&M.mag>.2?sprintSpeed(p):RUN)*p.spd;if(has)spd*=.94;
  if(p.role==='GK'&&has){const gx=ownGoalX(t);p.x=clamp(p.x,Math.min(gx,gx+t.dir*150),Math.max(gx,gx+t.dir*150));p.y=clamp(p.y,W/2-200,W/2+200)}
  while(I.q.length){const ev=I.q.shift();act(p,ev)}}
 function headable(p){const b=G.ball;if(b.owner||b.recv===p||b.z<14||b.z>118)return false;return Math.min(hyp(b.x-p.x,b.y-p.y),hyp(b.x+b.vx*.3-p.x,b.y+b.vy*.3-p.y))<115}
-function act(p,ev){const b=G.ball,t=p.team,has=b.owner===p,I=t.inp||In;const fv=!t.inp&&FPV(),dx=fv?Math.cos(In.yaw):I.mag?I.mx:p.fx,dy=fv?Math.sin(In.yaw):I.mag?I.my:p.fy;
+function act(p,ev){if(!(ev.power>=0))ev=Object.assign({},ev,{power:.6});const b=G.ball,t=p.team,has=b.owner===p,I=t.inp||In;const fv=!t.inp&&FPV(),dx=fv?Math.cos(In.yaw):I.mag?I.mx:p.fx,dy=fv?Math.sin(In.yaw):I.mag?I.my:p.fy;
  if(!has&&G.state==='play'&&p.role!=='GK'&&(ev.a==='shoot'||ev.a==='pass'||ev.a==='lob'||ev.a==='through')&&headable(p)){p.headPass=null;if(ev.a!=='shoot'){const m=pickMate(p,dx,dy,'pass')||pickMate(p,dx,dy,'auto');if(m&&m!==p)p.headPass=m}p.headAt=performance.now();p.headT=.5;p.jumpT=.42;return}
  if(has&&thrower(p)&&(ev.a==='shoot'||ev.a==='pass'||ev.a==='lob'||ev.a==='through')){const m=pickMate(p,dx,dy,'pass')||pickMate(p,dx,dy,'auto')||nearestTo(t,p.x,p.y,false,p);if(m){G.setPiece=null;doPass(p,m,'pass',.3);{const bb=G.ball,v=hyp(bb.vx,bb.vy);if(v>620){bb.vx*=620/v;bb.vy*=620/v}}toastFor(t,'Throw-in · '+m.name,900)}return}
  switch(ev.a){
@@ -1817,7 +1817,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=74;
+const NK_BUILD=75;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
