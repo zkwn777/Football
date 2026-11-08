@@ -1515,8 +1515,9 @@ function buildStatics(){const g=GL.g,S=GL.statics,white=[1,1,1,1],a=PI/6;
 function colorsFor(t){const k=t.kit;return{shirt:hc(k.shirt),trim:hc(k.trim),shorts:hc(k.shorts),sock:hc(k.socks),gk:hc(k.gk),gkS:hc('#222831'),skin:SKIN.map(c=>hc(c)),hair:HAIR.map(c=>hc(c))}}
 function numTex(num,shirt){const key=num+shirt;if(GL.numT[key])return GL.numT[key];const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');
  x.font='800 46px Barlow Condensed,Arial Narrow,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillStyle=lum(shirt)>.55?'#111':'#fff';x.fillText(String(num),32,36);return GL.numT[key]=GL.tex(c,false,false)}
+let GA=1;const GAV=new Float32Array(4);
 function D(geo,c,tex,lit){const gl=GL.gl,m=MS[msp];gl.bindBuffer(gl.ARRAY_BUFFER,geo.vb);gl.vertexAttribPointer(0,3,gl.FLOAT,false,32,0);gl.vertexAttribPointer(1,3,gl.FLOAT,false,32,12);gl.vertexAttribPointer(2,2,gl.FLOAT,false,32,24);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,geo.ib);
- gl.uniformMatrix4fv(GL.U.uM,false,m);gl.uniform4fv(GL.U.uC,c);if(tex){gl.bindTexture(gl.TEXTURE_2D,tex);gl.uniform1f(GL.U.uTex,1)}else gl.uniform1f(GL.U.uTex,0);gl.uniform1f(GL.U.uLit,lit===0?0:1);gl.drawElements(gl.TRIANGLES,geo.n,gl.UNSIGNED_SHORT,0)}
+ gl.uniformMatrix4fv(GL.U.uM,false,m);gl.uniform4fv(GL.U.uC,GA<1?(GAV[0]=c[0],GAV[1]=c[1],GAV[2]=c[2],GAV[3]=c[3]*GA,GAV):c);if(tex){gl.bindTexture(gl.TEXTURE_2D,tex);gl.uniform1f(GL.U.uTex,1)}else gl.uniform1f(GL.U.uTex,0);gl.uniform1f(GL.U.uLit,lit===0?0:1);gl.drawElements(gl.TRIANGLES,geo.n,gl.UNSIGNED_SHORT,0)}
 function DS(s){const gl=GL.gl;MS[0].set(s.m);msp=0;D(s.g,s.c,s.tex,s.lit)}
 const proj3=(x,y,z)=>{const m=GL.vp,cx=m[0]*x+m[4]*y+m[8]*z+m[12],cy=m[1]*x+m[5]*y+m[9]*z+m[13],cw=m[3]*x+m[7]*y+m[11]*z+m[15];return[(cx/cw*.5+.5)*cv.width,(-cy/cw*.5+.5)*cv.height,cw]};
 
@@ -1594,12 +1595,12 @@ function render3d(){const gl=GL.gl,g=GL.g,cam=G.cam,b=G.ball;
  const u=G.teams[0].ctrl;   // the selection ring is now a stamina ring, drawn in drawFx
  gl.depthMask(true);
  // players
- for(const t of G.teams){const cl=GL.kc[t.idx];for(const p of t.players)if((p!==fpv||Prefs.tp)&&!p.park&&!invHide(p))drawPlayer3(p,cl)}
+ for(const t of G.teams){const cl=GL.kc[t.idx];for(const p of t.players)if((p!==fpv||Prefs.tp)&&!p.park&&!invHide(p)){const gh=G.inv&&G.inv.p===p&&G.inv.team===G.teams[0];if(gh){GA=.5;gl.depthMask(false)}drawPlayer3(p,cl);if(gh){GA=1;gl.depthMask(true)}}}
  // ball (rolls along its travel direction)
  {const dx=b.x-GL.lb.x,dz=b.y-GL.lb.y,len=hyp(dx,dz);if(len>.01&&len<80){const ax=dz/len,az=-dx/len,an=len/5,c=Math.cos(an),s=Math.sin(an),t1=1-c,R=new Float32Array([t1*ax*ax+c,t1*ax*0+0,-s*az*0+s*0+t1*ax*az*0,0,0,0,0,0,0,0,0,0,0,0,0,1]);
    // Rodrigues for axis (ax,0,az)
    R.set([c+t1*ax*ax,s*az,t1*ax*az,0, -s*az,c,s*ax,0, t1*ax*az,-s*ax,c+t1*az*az,0, 0,0,0,1]);mMul(GL.ballR,R,GL.ballR)}
-  if(!ballHide()){GL.lb.x=b.x;GL.lb.y=b.y;const m=resetM();mT(m,b.x,5+b.z,b.y);mMul(m,m,GL.ballR);m[12]=b.x;m[13]=5+b.z;m[14]=b.y;D(g.ball,wh,GL.t.ball,1)}}
+  if(!ballHide()){const gb=G.inv&&G.inv.team===G.teams[0];if(gb)GA=.5;GL.lb.x=b.x;GL.lb.y=b.y;const m=resetM();mT(m,b.x,5+b.z,b.y);mMul(m,m,GL.ballR);m[12]=b.x;m[13]=5+b.z;m[14]=b.y;D(g.ball,wh,GL.t.ball,1);GA=1}}
  // nets + confetti (transparent)
  gl.depthMask(false);for(const s of GL.nets)DS(s);
  for(const q of G.parts){const m=resetM();mT(m,q.x,q.z+1,q.y);mRY(m,q.l*6);mS(m,q.r*1.8,1,q.r*1.2);D(g.plane,hc(q.c),null,0)}
@@ -1809,7 +1810,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=62;
+const NK_BUILD=63;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
