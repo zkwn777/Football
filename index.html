@@ -968,7 +968,9 @@ function steerV(p,vx,vy,dt){const ax=vx-p.vx,ay=vy-p.vy,al=hyp(ax,ay);
  // movement inertia: velocity eases toward the target (lerp), a little slower to brake than to start
  const tgt=hyp(vx,vy),cur=hyp(p.vx,p.vy),k=tgt>=cur-4?7.2:5.4,f=1-Math.exp(-k*dt),cap=1250*dt;let sx=ax*f,sy=ay*f;const sl=hyp(sx,sy);if(sl>cap){sx*=cap/sl;sy*=cap/sl}p.vx+=sx;p.vy+=sy}
 function steer(p,tx,ty,spd,dt,arrive){const dx=tx-p.x,dy=ty-p.y,d=hyp(dx,dy);const s=arrive===false?spd:spd*Math.min(1,d/50);steerV(p,d>1?dx/d*s:0,d>1?dy/d*s:0,dt)}
-function integrate(p,dt){
+function thrower(p){const s=G.setPiece;return !!(s&&s.type==='throw'&&s.t>0&&G.ball.owner===p&&p.team.idx===s.team&&(p.team.isUser||p.team.inp))}
+function integrate(p,dt){if(thrower(p)){p.vx=p.vy=0;return}
+
  if(p.slowT>0){p.slowT-=dt;const k=Math.exp(-4*dt);p.vx*=k;p.vy*=k}
  if(p.state==='stun'){p.vx*=Math.exp(-7*dt);p.vy*=Math.exp(-7*dt);p.stT-=dt;if(p.stT<=0)p.state=''}
  else if(p.state==='slide'){p.stT-=dt;const k=Math.max(0,p.stT/.55);p.vx=Math.cos(p.slideDir)*(60+300*k);p.vy=Math.sin(p.slideDir)*(60+300*k);const b=G.ball;
@@ -1082,7 +1084,7 @@ function updateUser(p,dt){const t=p.team,b=G.ball,I=t.inp||In,M=(!t.inp&&FPV())?
   if(t===G.teams[0]&&!t.inp&&In.contain&&p.role!=='GK'&&ov&&ov.team!==t&&!(p.skillT>0)){containMove(p,ov,dt);integrate(p,dt);const fx=ov.x-p.x,fy=ov.y-p.y,fl=hyp(fx,fy)||1;p.fx=fx/fl;p.fy=fy/fl;while(I.q.length){act(p,I.q.shift())}return}}
  const has=b.owner===p;
  if(I.sprint&&M.mag>.3&&p.state===''){p.sprH=(p.sprH||0)+dt}else p.sprH=0;
- if(has&&p.sprH>.28&&p.knockCd<=0&&M.mag>.5&&p.skillT<=0&&G.state==='play')knockOn(p,M);   // KNOCK-ON: hold sprint with the ball to push it ahead and chase it
+ if(has&&!thrower(p)&&p.sprH>.28&&p.knockCd<=0&&M.mag>.5&&p.skillT<=0&&G.state==='play')knockOn(p,M);   // KNOCK-ON: hold sprint with the ball to push it ahead and chase it
 let spd=(I.sprint&&M.mag>.2?sprintSpeed(p):RUN)*p.spd;if(has)spd*=.94;
  if(p.skillT>0&&p.skillKind)skillMove(p,dt);
  else{if(p.skillT>0)spd=285*p.spd;steerV(p,M.mx*spd*Math.min(1,M.mag*1.2),M.my*spd*Math.min(1,M.mag*1.2),dt);
@@ -1093,6 +1095,7 @@ let spd=(I.sprint&&M.mag>.2?sprintSpeed(p):RUN)*p.spd;if(has)spd*=.94;
 function headable(p){const b=G.ball;if(b.owner||b.recv===p||b.z<14||b.z>118)return false;return Math.min(hyp(b.x-p.x,b.y-p.y),hyp(b.x+b.vx*.3-p.x,b.y+b.vy*.3-p.y))<115}
 function act(p,ev){const b=G.ball,t=p.team,has=b.owner===p,I=t.inp||In;const fv=!t.inp&&FPV(),dx=fv?Math.cos(In.yaw):I.mag?I.mx:p.fx,dy=fv?Math.sin(In.yaw):I.mag?I.my:p.fy;
  if(!has&&G.state==='play'&&p.role!=='GK'&&(ev.a==='shoot'||ev.a==='pass'||ev.a==='lob'||ev.a==='through')&&headable(p)){p.headPass=null;if(ev.a!=='shoot'){const m=pickMate(p,dx,dy,'pass')||pickMate(p,dx,dy,'auto');if(m&&m!==p)p.headPass=m}p.headAt=performance.now();p.headT=.5;p.jumpT=.42;return}
+ if(has&&thrower(p)&&(ev.a==='shoot'||ev.a==='pass'||ev.a==='lob'||ev.a==='through')){const m=pickMate(p,dx,dy,'pass')||pickMate(p,dx,dy,'auto')||nearestTo(t,p.x,p.y,false,p);if(m){G.setPiece=null;doPass(p,m,'pass',.3);{const bb=G.ball,v=hyp(bb.vx,bb.vy);if(v>620){bb.vx*=620/v;bb.vy*=620/v}}toastFor(t,'Throw-in · '+m.name,900)}return}
  switch(ev.a){
   case'head':p.headAt=performance.now();p.headT=.5;p.jumpT=.42;break;
   case'pass':case'lob':case'through':if(!has)return;
@@ -1243,7 +1246,7 @@ function endDead(){const r=G.restart,t=G.teams[r.team];let taker=r.type==='goalk
  if(r.type==='freekick'){taker.x=r.x-t.dir*12;taker.y=r.y;for(const o of G.teams[1-r.team].players){const dx=o.x-r.x,dy=o.y-r.y,d=hyp(dx,dy)||1;if(d<110&&o.role!=='GK'){o.x=clamp(r.x+dx/d*110,8,L-8);o.y=clamp(r.y+dy/d*110,8,W-8)}}}
  else if(r.type==='goalkick'){taker.x=r.x-inx*14;taker.y=r.y}else if(r.type==='throw'){taker.x=r.x;taker.y=r.y-iny*8}else{taker.x=r.x-inx*8;taker.y=r.y-iny*8}
  taker.fx=r.type==='throw'?0:r.type==='freekick'?t.dir:inx;taker.fy=r.type==='throw'?iny:r.type==='freekick'?0:iny*.4;taker.vx=taker.vy=0;taker.state='';
- setOwner(taker);taker.waitT=r.type==='corner'?1:.7;G.state='play';G.setPiece={type:r.type,team:r.team,t:5};if(t.isUser){t.ctrl=taker;if(r.type==='corner'&&!G.online)toast('Corner · aim with the stick, tap Pass to cross',2200)}}
+ setOwner(taker);taker.waitT=r.type==='corner'?1:.7;G.state='play';G.setPiece={type:r.type,team:r.team,t:r.type==='throw'?14:5};if(t.isUser){t.ctrl=taker;if(r.type==='corner'&&!G.online)toast('Corner · aim with the stick, tap Pass to cross',2200);if(r.type==='throw'&&!G.online)toast('Throw-in · aim at a teammate, tap Pass',2200)}}
 const NETIN={mx:0,my:0,mag:0,sprint:false,shoot:false,pass:false,thru:false,q:[]},NETEV=[];
 function toastFor(t,m,ms){if(t.inp)NETEV.push(['t',m,ms]);else toast(m,ms)}
 const REC={buf:[],t:0},PF=['x','y','z','vx','vy','fx','fy','phase','rot','skillT','skillSpin'],PS=['pose','state','diveDir','skillKind'];
@@ -1285,7 +1288,7 @@ function update(dt){const b=G.ball;if(!b)return;G.stateT+=dt;for(const tm of G.t
  if(st==='foul'){if(G.stateT>1.7)resolveFoul();return}
  if(st!=='play'&&st!=='dead'){return}
  if(st==='dead'){if(G.stateT>1.25)endDead()}
- else{G.elapsed+=dt;G.teams[G.possTeam].st.poss+=dt;if(G.setPiece){G.setPiece.t-=dt;if(G.setPiece.t<=0)G.setPiece=null}}
+ else{G.elapsed+=dt;G.teams[G.possTeam].st.poss+=dt;if(G.setPiece){G.setPiece.t-=dt;if(G.setPiece.t<=0){const sp=G.setPiece,ow=G.ball.owner;G.setPiece=null;if(sp.type==='throw'&&ow&&ow.team.idx===sp.team&&(ow.team.isUser||ow.team.inp)){G.setPiece=sp;sp.t=.01;act(ow,{a:'pass'});G.setPiece=null}}}}
  prepTeams();autoSwitch(dt);headCheck(dt);
  for(const t of G.teams)for(const p of t.players){
   if(p.role==='GK'&&!(t.ctrl===p&&b.owner===p&&t.isUser))updateKeeper(p,dt);
@@ -1813,7 +1816,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=65;
+const NK_BUILD=66;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
