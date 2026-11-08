@@ -1817,7 +1817,7 @@ function pushNetEv(){while(NETEV.length){const e=NETEV.shift();pushEv(e)}}
 /* ---- room lifecycle ---- */
 
 
-const NK_BUILD=72;
+const NK_BUILD=73;
 let peerLoad=null;
 function loadPeerLib(){if(window.Peer)return Promise.resolve(true);if(peerLoad)return peerLoad;
  const urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
@@ -3058,7 +3058,7 @@ function cmStop(){cmQ=[];cmCancel()}
  const s0=doShoot;doShoot=function(p,a,b,c){const r=s0(p,a,b,c);if(G.ball&&G.ball.shot===p.team&&Math.random()<.5)cmSay('shot',1);return r};
  const k0=keeperSave;keeperSave=function(g,s){const n=g.team.st.saves,r=k0(g,s);if(g.team.st.saves>n)cmSay('save',1);return r};
  const f0=foul;foul=function(p,v,s){const st=G.state,r=f0(p,v,s);if(G.state==='foul'&&st!=='foul')cmSay('foul',1);return r};
- const d0=startDead;startDead=function(type,team,x,y){const r=d0(type,team,x,y);if(CM[type]&&Math.random()<.7)cmSay(type);return r};
+ const d0=startDead;startDead=function(type,team,x,y){const r=d0(type,team,x,y);if(type==='corner'&&Math.random()<.7)cmSay('corner');return r};
  const e0=endHalf;endHalf=function(){const r=e0();if(G.state==='half')cmSay('half',2);else if(G.state==='full')cmSay('full',2);return r};
  const u0=update;update=function(dt){const st=G.state;const r=u0(dt);if(st==='kickoff'&&G.state==='play'&&G.elapsed<2)cmSay('start',1);return r};
  const b0=buildMatch;buildMatch=function(o){cmStop();return b0(o)};
